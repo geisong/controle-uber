@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Uber $">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Controle Uber</title>
+<style>
+  :root{
+    --bg:#f3f4f6; --card:#fff; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
+    --brand:#111827; --brand-text:#fff; --pos:#15803d; --neg:#b91c1c; --accent:#2563eb;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --bg:#0b0f17; --card:#161b26; --text:#f3f4f6; --muted:#9ca3af; --line:#273042;
+      --brand:#f3f4f6; --brand-text:#111827; --pos:#4ade80; --neg:#f87171; --accent:#60a5fa; color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --bg:#0b0f17; --card:#161b26; --text:#f3f4f6; --muted:#9ca3af; --line:#273042;
+    --brand:#f3f4f6; --brand-text:#111827; --pos:#4ade80; --neg:#f87171; --accent:#60a5fa; color-scheme:dark; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    padding:0 0 calc(24px + env(safe-area-inset-bottom))}
+  header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:14px 16px 8px}
+  h1{margin:0 0 10px;font-size:20px}
+  .tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px}
+  .tabs button{flex:1;border:0;background:none;color:var(--muted);padding:10px 4px;border-radius:9px;font:inherit;font-size:14px;font-weight:600}
+  .tabs button.on{background:var(--brand);color:var(--brand-text)}
+  main{padding:8px 16px}
+  section{display:none} section.on{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .card h2{font-size:16px;margin:0 0 10px}
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+  input{width:100%;font:inherit;font-size:17px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text)}
+  input[readonly]{background:var(--card);border-style:dashed;color:var(--muted);font-weight:600}
+  input:focus{outline:2px solid var(--accent);border-color:transparent}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .hint{font-size:12px;color:var(--muted);margin-top:4px}
+  .btn{display:block;width:100%;margin-top:14px;padding:13px;border:0;border-radius:11px;background:var(--brand);color:var(--brand-text);font:inherit;font-weight:700}
+  .btn.ghost{background:none;color:var(--muted);border:1px solid var(--line);margin-top:8px;font-weight:600}
+  .preview{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+  .stat{background:var(--bg);border-radius:10px;padding:8px 10px}
+  .stat small{display:block;color:var(--muted);font-size:11px}
+  .stat b{font-size:16px}
+  .pos{color:var(--pos)} .neg{color:var(--neg)}
+  .item{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+  .item:first-of-type{border-top:0}
+  .item .l{min-width:0} .item .r{text-align:right;white-space:nowrap}
+  .item small{display:block;color:var(--muted);font-size:12px}
+  .del.armed{color:var(--neg);font-weight:700;text-decoration:none}
+  .del{border:0;background:none;color:var(--muted);font-size:12px;padding:4px 0;text-decoration:underline}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:10px 0}
+  .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .filters button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:20px;padding:6px 12px;font:inherit;font-size:13px}
+  .filters button.on{background:var(--brand);color:var(--brand-text);border-color:var(--brand)}
+  .big{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .big .stat b{font-size:19px}
+  .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--brand);color:var(--brand-text);
+    padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>🚗 Controle Uber</h1>
+  <nav class="tabs">
+    <button data-tab="viagem" class="on">Viagem</button>
+    <button data-tab="abast">Abastecer</button>
+    <button data-tab="resumo">Resumo</button>
+  </nav>
+</header>
+
+<main>
+  <!-- VIAGEM -->
+  <section id="viagem" class="on">
+    <div class="card">
+      <h2>Nova viagem</h2>
+      <label for="vData">Data da viagem</label>
+      <input id="vData" type="date">
+      <div class="row">
+        <div>
+          <label for="vKm">Km da viagem</label>
+          <input id="vKm" type="number" inputmode="decimal" step="0.1" min="0" placeholder="ex: 12,5">
+        </div>
+        <div>
+          <label for="vKml">Km por litro</label>
+          <input id="vKml" type="number" inputmode="decimal" step="0.1" min="0" placeholder="ex: 11">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="vPreco">Preço do litro (R$)</label>
+          <input id="vPreco" type="text" readonly tabindex="-1" placeholder="sem abastecimento">
+        </div>
+        <div>
+          <label for="vValor">Valor da viagem (R$)</label>
+          <input id="vValor" type="number" inputmode="decimal" step="0.01" min="0" placeholder="ex: 25,00">
+        </div>
+      </div>
+      <div class="hint" id="precoHint"></div>
+      <div class="preview">
+        <div class="stat"><small>Litros</small><b id="pLitros">–</b></div>
+        <div class="stat"><small>Custo</small><b id="pCusto">–</b></div>
+        <div class="stat"><small>Ganho</small><b id="pGanho">–</b></div>
+      </div>
+      <button class="btn" id="salvarViagem">Salvar viagem</button>
+    </div>
+
+    <div class="card">
+      <h2>Viagens salvas</h2>
+      <div id="listaViagens"></div>
+    </div>
+  </section>
+
+  <!-- ABASTECIMENTO -->
+  <section id="abast">
+    <div class="card">
+      <h2>Novo abastecimento</h2>
+      <label for="aData">Data do abastecimento</label>
+      <input id="aData" type="date">
+      <div class="row">
+        <div>
+          <label for="aValor">Valor pago (R$)</label>
+          <input id="aValor" type="number" inputmode="decimal" step="0.01" min="0" placeholder="ex: 200,00">
+        </div>
+        <div>
+          <label for="aPreco">Preço do litro (R$)</label>
+          <input id="aPreco" type="number" inputmode="decimal" step="0.01" min="0" placeholder="ex: 5,89">
+        </div>
+      </div>
+      <div class="hint" id="aLitros">Litros abastecidos: –</div>
+      <button class="btn" id="salvarAbast">Salvar abastecimento</button>
+    </div>
+
+    <div class="card">
+      <h2>Abastecimentos</h2>
+      <div id="listaAbast"></div>
+    </div>
+  </section>
+
+  <!-- RESUMO -->
+  <section id="resumo">
+    <div class="filters" id="filtros">
+      <button data-f="hoje">Hoje</button>
+      <button data-f="semana">7 dias</button>
+      <button data-f="mes" class="on">Este mês</button>
+      <button data-f="tudo">Tudo</button>
+    </div>
+    <div class="card">
+      <h2>Resultado do período</h2>
+      <div class="big">
+        <div class="stat"><small>Faturamento</small><b id="rFat">–</b></div>
+        <div class="stat"><small>Custo combustível</small><b id="rCusto">–</b></div>
+        <div class="stat"><small>Ganho líquido</small><b id="rGanho">–</b></div>
+        <div class="stat"><small>% de ganho</small><b id="rPct">–</b></div>
+        <div class="stat"><small>Ganho médio por viagem</small><b id="rMedio">–</b></div>
+        <div class="stat"><small>Viagens</small><b id="rQtd">–</b></div>
+        <div class="stat"><small>Km rodados</small><b id="rKm">–</b></div>
+        <div class="stat"><small>Ganho por km</small><b id="rPorKm">–</b></div>
+        <div class="stat"><small>Gasto em abastecimentos</small><b id="rAbast">–</b></div>
+        <div class="stat"><small>Litros abastecidos</small><b id="rLitros">–</b></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Dados</h2>
+      <div class="hint" id="syncHint">Os dados ficam salvos neste aparelho. Faça um backup de vez em quando.</div>
+      <button class="btn ghost" id="exportar">Baixar backup (.json)</button>
+      <button class="btn ghost" id="importarBtn">Restaurar backup (junta com os dados atuais)</button>
+      <input type="file" id="importar" accept="application/json,.json" hidden>
+      <button class="btn ghost" id="exportarCsv">Exportar viagens (.csv para Excel)</button>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const KEY = 'controleUber.v1';
+  const $ = id => document.getElementById(id);
+  const brl = v => (isFinite(v) ? v : 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const num = (v,d=1) => (isFinite(v) ? v : 0).toLocaleString('pt-BR',{maximumFractionDigits:d});
+  const hoje = () => { const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+  const dataBR = s => s ? s.split('-').reverse().join('/') : '';
+  const val = id => { const n = parseFloat(String($(id).value).replace(',','.')); return isFinite(n) ? n : NaN; };
+
+  let db = { viagens: [], abastecimentos: [], ultimoKml: '' };
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s) db = Object.assign(db, s); } catch(e){}
+  const salvar = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){} };
+
+  // Nuvem: quando aberto pelo link do Claude, guarda tudo na conta do usuário (privado)
+  let nuvem = null; // { root: DocumentReference }
+  const colecao = tipo => nuvem.root.collection(tipo);
+  function nuvemSalvar(tipo, reg){ if (nuvem) colecao(tipo).doc(reg.id).set(reg).catch(()=>toast('Falha ao salvar na nuvem')); }
+  function nuvemExcluir(tipo, id){ if (nuvem) colecao(tipo).doc(id).delete().catch(()=>toast('Falha ao excluir na nuvem')); }
+  function nuvemConfig(){ if (nuvem) nuvem.root.set({ ultimoKml: db.ultimoKml || '' }).catch(()=>{}); }
+  async function conectarNuvem(){
+    if (!window.claude || !window.claude.use) return;
+    try {
+      const [cdb, user] = await Promise.all([claude.use('db'), claude.use('user')]);
+      if (!cdb || !user) return;
+      const uid = await user.id(); if (!uid) return;
+      const root = cdb.collection('data/users/' + uid).doc('uber');
+      const [vs, as, cfg] = await Promise.all([root.collection('viagens').get(), root.collection('abastecimentos').get(), root.get()]);
+      nuvem = { root };
+      const remotoV = vs.docs.map(d=>d.data()), remotoA = as.docs.map(d=>d.data());
+      // Envia o que só existe neste aparelho
+      const idsV = new Set(remotoV.map(x=>x.id)), idsA = new Set(remotoA.map(x=>x.id));
+      for (const v of db.viagens) if (!idsV.has(v.id)) { await colecao('viagens').doc(v.id).set(v); remotoV.push(v); }
+      for (const a of db.abastecimentos) if (!idsA.has(a.id)) { await colecao('abastecimentos').doc(a.id).set(a); remotoA.push(a); }
+      const c = cfg.exists ? cfg.data() : {};
+      db = { viagens: remotoV, abastecimentos: remotoA, ultimoKml: db.ultimoKml || c.ultimoKml || '' };
+      salvar(); init();
+      $('syncHint').textContent = 'Dados salvos na sua conta Claude. Abrindo este link em outro aparelho, eles aparecem lá também.';
+    } catch(e) { nuvem = null; }
+  }
+
+  function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('on'),1800); }
+
+  // Abas
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x===b));
+    document.querySelectorAll('main section').forEach(s => s.classList.toggle('on', s.id===b.dataset.tab));
+    if (b.dataset.tab==='resumo') renderResumo();
+    window.scrollTo(0,0);
+  });
+
+  // Preço do litro: último abastecimento até a data da viagem
+  function precoNaData(data){
+    const lista = db.abastecimentos.filter(a => a.data <= data).sort((a,b)=> a.data<b.data?1:a.data>b.data?-1:b.criado-a.criado);
+    return lista[0] || db.abastecimentos.slice().sort((a,b)=> a.data<b.data?1:-1)[0] || null;
+  }
+  let precoAtual = NaN;
+  function sugerirPreco(){
+    const a = precoNaData($('vData').value || hoje());
+    precoAtual = a ? a.preco : NaN;
+    $('vPreco').value = a ? brl(a.preco) : '';
+    $('precoHint').textContent = a ? `Preço do último abastecimento (${dataBR(a.data)}).` : 'Cadastre um abastecimento na aba Abastecer para o preço do litro aparecer aqui.';
+  }
+
+  // Cálculo
+  function calc(km, kml, preco, valor){
+    const litros = km / kml;
+    const custo = litros * preco;
+    return { litros, custo, ganho: valor - custo };
+  }
+  function previewViagem(){
+    const km=val('vKm'), kml=val('vKml'), preco=precoAtual, valor=val('vValor');
+    const ok = km>0 && kml>0 && preco>0;
+    const r = ok ? calc(km,kml,preco, isFinite(valor)?valor:0) : null;
+    $('pLitros').textContent = r ? num(r.litros,2)+' L' : '–';
+    $('pCusto').textContent = r ? brl(r.custo) : '–';
+    const g=$('pGanho');
+    g.textContent = r && isFinite(valor) ? brl(r.ganho) : '–';
+    g.className = r && isFinite(valor) ? (r.ganho>=0?'pos':'neg') : '';
+  }
+  ['vKm','vKml','vValor'].forEach(id => $(id).addEventListener('input', previewViagem));
+  $('vData').addEventListener('change', () => { sugerirPreco(); previewViagem(); });
+
+  $('salvarViagem').onclick = () => {
+    const data=$('vData').value, km=val('vKm'), kml=val('vKml'), preco=precoAtual, valor=val('vValor');
+    if (!data) return toast('Informe a data da viagem');
+    if (!(km>0)) return toast('Informe os km da viagem');
+    if (!(kml>0)) return toast('Informe quantos km/L o carro faz');
+    if (!(preco>0)) return toast('Cadastre um abastecimento primeiro');
+    if (!(valor>=0)) return toast('Informe o valor da viagem');
+    const r = calc(km,kml,preco,valor);
+    const reg = { id: Date.now()+''+Math.random().toString(36).slice(2,6), criado: Date.now(), data, km, kml, preco, valor, custo: r.custo, ganho: r.ganho };
+    db.viagens.push(reg);
+    const mudouKml = db.ultimoKml !== kml; db.ultimoKml = kml;
+    salvar(); nuvemSalvar('viagens', reg); if (mudouKml) nuvemConfig();
+    $('vKm').value=''; $('vValor').value='';
+    previewViagem(); renderViagens();
+    toast('Viagem salva: ganho de ' + brl(r.ganho));
+    $('vKm').focus();
+  };
+
+  // Abastecimento
+  function previewAbast(){
+    const v=val('aValor'), p=val('aPreco');
+    $('aLitros').textContent = 'Litros abastecidos: ' + (v>0 && p>0 ? num(v/p,2)+' L' : '–');
+  }
+  ['aValor','aPreco'].forEach(id => $(id).addEventListener('input', previewAbast));
+  $('salvarAbast').onclick = () => {
+    const data=$('aData').value, valor=val('aValor'), preco=val('aPreco');
+    if (!data) return toast('Informe a data do abastecimento');
+    if (!(valor>0)) return toast('Informe o valor pago');
+    if (!(preco>0)) return toast('Informe o preço do litro');
+    const reg = { id: Date.now()+''+Math.random().toString(36).slice(2,6), criado: Date.now(), data, valor, preco, litros: valor/preco };
+    db.abastecimentos.push(reg);
+    salvar(); nuvemSalvar('abastecimentos', reg);
+    $('aValor').value=''; $('aPreco').value='';
+    previewAbast(); renderAbast(); sugerirPreco(); previewViagem();
+    toast('Abastecimento salvo');
+  };
+
+  // Listas
+  const ordenar = arr => arr.slice().sort((a,b)=> a.data<b.data?1:a.data>b.data?-1:b.criado-a.criado);
+  function renderViagens(){
+    const el=$('listaViagens'), lista=ordenar(db.viagens).slice(0,50);
+    if (!lista.length) { el.innerHTML='<div class="empty">Nenhuma viagem salva ainda.</div>'; return; }
+    el.innerHTML = lista.map(v => `
+      <div class="item">
+        <div class="l"><b>${dataBR(v.data)}</b> · ${num(v.km)} km
+          <small>Corrida ${brl(v.valor)} · combustível ${brl(v.custo)}</small>
+          <small>${num(v.kml)} km/L · litro ${brl(v.preco)}</small></div>
+        <div class="r"><b class="${v.ganho>=0?'pos':'neg'}">${brl(v.ganho)}</b><br><button class="del" data-del-v="${v.id}">excluir</button></div>
+      </div>`).join('') + (db.viagens.length>50 ? '<div class="empty">Mostrando as 50 mais recentes. Veja o total em Resumo.</div>' : '');
+  }
+  function renderAbast(){
+    const el=$('listaAbast'), lista=ordenar(db.abastecimentos);
+    if (!lista.length) { el.innerHTML='<div class="empty">Nenhum abastecimento salvo ainda.</div>'; return; }
+    el.innerHTML = lista.map(a => `
+      <div class="item">
+        <div class="l"><b>${dataBR(a.data)}</b><small>${num(a.litros,2)} L a ${brl(a.preco)}/L</small></div>
+        <div class="r"><b>${brl(a.valor)}</b><br><button class="del" data-del-a="${a.id}">excluir</button></div>
+      </div>`).join('');
+  }
+  // Excluir: primeiro toque arma, segundo confirma
+  document.addEventListener('click', e => {
+    const b=e.target.closest('.del'); if (!b) return;
+    if (!b.classList.contains('armed')) {
+      b.classList.add('armed'); b.textContent='tocar de novo p/ excluir';
+      setTimeout(()=>{ if (b.isConnected){ b.classList.remove('armed'); b.textContent='excluir'; } }, 3000);
+      return;
+    }
+    const v=b.dataset.delV, a=b.dataset.delA;
+    if (v) { db.viagens=db.viagens.filter(x=>x.id!==v); salvar(); nuvemExcluir('viagens', v); renderViagens(); }
+    if (a) { db.abastecimentos=db.abastecimentos.filter(x=>x.id!==a); salvar(); nuvemExcluir('abastecimentos', a); renderAbast(); sugerirPreco(); previewViagem(); }
+    toast('Excluído');
+  });
+
+  // Resumo
+  let filtro='mes';
+  document.querySelectorAll('#filtros button').forEach(b => b.onclick = () => {
+    filtro=b.dataset.f;
+    document.querySelectorAll('#filtros button').forEach(x=>x.classList.toggle('on',x===b));
+    renderResumo();
+  });
+  function noPeriodo(data){
+    const h=hoje();
+    if (filtro==='tudo') return true;
+    if (filtro==='hoje') return data===h;
+    if (filtro==='mes') return data.slice(0,7)===h.slice(0,7);
+    const d=new Date(h+'T00:00'); d.setDate(d.getDate()-6);
+    const ini = new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+    return data>=ini && data<=h;
+  }
+  function renderResumo(){
+    const vs=db.viagens.filter(v=>noPeriodo(v.data)), as=db.abastecimentos.filter(a=>noPeriodo(a.data));
+    const s=(arr,k)=>arr.reduce((t,x)=>t+x[k],0);
+    const fat=s(vs,'valor'), custo=s(vs,'custo'), ganho=fat-custo, km=s(vs,'km');
+    $('rFat').textContent=brl(fat); $('rCusto').textContent=brl(custo);
+    $('rGanho').textContent=brl(ganho); $('rGanho').className=ganho>=0?'pos':'neg';
+    const pct = fat>0 ? ganho/fat*100 : NaN;
+    $('rPct').textContent = isFinite(pct) ? num(pct,1)+'%' : '–'; $('rPct').className = isFinite(pct) ? (pct>=0?'pos':'neg') : '';
+    $('rMedio').textContent = vs.length ? brl(ganho/vs.length) : '–';
+    $('rQtd').textContent=vs.length; $('rKm').textContent=num(km)+' km';
+    $('rPorKm').textContent= km>0 ? brl(ganho/km) : '–';
+    $('rAbast').textContent=brl(s(as,'valor')); $('rLitros').textContent=num(s(as,'litros'),1)+' L';
+  }
+
+  // Backup
+  async function baixar(nome, conteudo, tipo){
+    if (window.claude && window.claude.use) {
+      const dl = await claude.use('downloads').catch(()=>null);
+      if (dl) { try { await dl.save({ filename: nome, data: new Blob([conteudo],{type:tipo}) }); } catch(e){ toast('Download cancelado'); } return; }
+    }
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([conteudo],{type:tipo})); a.download=nome;
+    document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},500);
+  }
+  $('exportar').onclick = () => baixar(`controle-uber-backup-${hoje()}.json`, JSON.stringify(db,null,1), 'application/json');
+  $('importarBtn').onclick = () => $('importar').click();
+  $('importar').onchange = e => {
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload = () => { try {
+      const d=JSON.parse(r.result);
+      if (!Array.isArray(d.viagens) || !Array.isArray(d.abastecimentos)) throw 0;
+      const idsV=new Set(db.viagens.map(x=>x.id)), idsA=new Set(db.abastecimentos.map(x=>x.id));
+      let n=0;
+      d.viagens.forEach(v=>{ if(v&&v.id&&!idsV.has(v.id)){ db.viagens.push(v); nuvemSalvar('viagens', v); n++; } });
+      d.abastecimentos.forEach(a=>{ if(a&&a.id&&!idsA.has(a.id)){ db.abastecimentos.push(a); nuvemSalvar('abastecimentos', a); n++; } });
+      if (!db.ultimoKml && d.ultimoKml) db.ultimoKml=d.ultimoKml;
+      salvar(); init(); toast(n ? `Backup restaurado: ${n} registro(s)` : 'Nada novo no backup');
+    } catch(_) { toast('Arquivo de backup inválido'); } };
+    r.readAsText(f); e.target.value='';
+  };
+  $('exportarCsv').onclick = () => {
+    const f=n=>String(n.toFixed(2)).replace('.',',');
+    const linhas=[['Data','Km','Km/L','Preco litro','Valor viagem','Custo combustivel','Ganho'].join(';')]
+      .concat(ordenar(db.viagens).reverse().map(v=>[dataBR(v.data),f(v.km),f(v.kml),f(v.preco),f(v.valor),f(v.custo),f(v.ganho)].join(';')));
+    baixar(`viagens-uber-${hoje()}.csv`, '﻿'+linhas.join('\n'), 'text/csv');
+  };
+
+  function init(){
+    $('vData').value=hoje(); $('aData').value=hoje();
+    if (db.ultimoKml) $('vKml').value=db.ultimoKml;
+    sugerirPreco(); previewViagem(); renderViagens(); renderAbast(); renderResumo();
+  }
+  init();
+  conectarNuvem();
+})();
+</script>
+</body>
+</html>
