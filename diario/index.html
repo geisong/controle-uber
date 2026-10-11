@@ -106,16 +106,16 @@
 <header>
   <h1>📒 Diário Uber</h1>
   <nav class="tabs">
-    <button data-tab="dia" class="on">Dia</button>
+    <button data-tab="painel" class="on">Painel</button>
+    <button data-tab="dia">Dia</button>
     <button data-tab="abast">Abastecer</button>
     <button data-tab="dre">DRE</button>
-    <button data-tab="painel">Painel</button>
   </nav>
 </header>
 
 <main>
   <!-- FECHAMENTO DO DIA -->
-  <section id="dia" class="on">
+  <section id="dia">
     <div class="card">
       <h2 id="diaTitulo">Fechamento do dia</h2>
       <label for="dData">Data</label>
@@ -207,7 +207,7 @@
   </section>
 
   <!-- PAINEL -->
-  <section id="painel">
+  <section id="painel" class="on">
     <div class="periodo"><select id="perPainel" aria-label="Período"></select></div>
     <div class="kpis">
       <div class="kpi hero"><small><i class="dot" style="background:var(--text)"></i>Faturado</small><b id="kFat">–</b><span class="sub" id="kDias"></span></div>
