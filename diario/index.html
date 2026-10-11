@@ -15,14 +15,14 @@
   :root{
     --bg:#f3f4f6; --card:#fff; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
     --brand:#111827; --brand-text:#fff; --pos:#15803d; --neg:#b91c1c; --accent:#2563eb;
-    --s-liq:#2563eb; --s-tax:#d97706; --s-comb:#0d9488;
+    --s-liq:#2563eb; --s-tax:#d97706; --s-comb:#0d9488; --s-fat:#334155; --s-net:#4f46e5; --s-km:#db2777;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){ --bg:#0b0f17; --card:#161b26; --text:#f3f4f6; --muted:#9ca3af; --line:#273042;
-      --brand:#f3f4f6; --brand-text:#111827; --pos:#4ade80; --neg:#f87171; --accent:#60a5fa; --s-liq:#3b82f6; --s-tax:#d97706; --s-comb:#0d9488; color-scheme:dark; }
+      --brand:#f3f4f6; --brand-text:#111827; --pos:#4ade80; --neg:#f87171; --accent:#60a5fa; --s-liq:#3b82f6; --s-tax:#d97706; --s-comb:#0d9488; --s-fat:#cbd5e1; --s-net:#818cf8; --s-km:#f472b6; color-scheme:dark; }
   }
   :root[data-theme="dark"]{ --bg:#0b0f17; --card:#161b26; --text:#f3f4f6; --muted:#9ca3af; --line:#273042;
-    --brand:#f3f4f6; --brand-text:#111827; --pos:#4ade80; --neg:#f87171; --accent:#60a5fa; --s-liq:#3b82f6; --s-tax:#d97706; --s-comb:#0d9488; color-scheme:dark; }
+    --brand:#f3f4f6; --brand-text:#111827; --pos:#4ade80; --neg:#f87171; --accent:#60a5fa; --s-liq:#3b82f6; --s-tax:#d97706; --s-comb:#0d9488; --s-fat:#cbd5e1; --s-net:#818cf8; --s-km:#f472b6; color-scheme:dark; }
   *{box-sizing:border-box}
   [hidden]{display:none!important}
   body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -69,6 +69,11 @@
   .kpi b{display:block;font-size:17px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .kpi .sub{display:block;font-size:12px;color:var(--muted);margin-top:2px}
   .dot{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
+  button.kpi,button.stat{appearance:none;-webkit-appearance:none;font:inherit;color:inherit;text-align:left;width:100%;position:relative;cursor:pointer}
+  button.kpi::after,button.stat::after{content:'›';position:absolute;right:10px;top:6px;color:var(--muted);font-size:20px;line-height:1}
+  button.stat{border:0}
+  button.kpi:active,button.stat:active{transform:scale(.98)}
+  .stat b small{font-weight:400;margin-top:1px}
   .hero{grid-column:1/-1}
   .hero b{font-size:28px}
   .big{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -95,6 +100,30 @@
   .mov .v{text-align:right;white-space:nowrap;font-weight:600}
   .mov .s{grid-column:3;text-align:right;color:var(--muted);font-size:11px;white-space:nowrap}
   .mov .desc small{display:block;color:var(--muted);font-size:12px}
+  /* Detalhe da métrica */
+  .sheet{position:fixed;inset:0;z-index:20;display:none}
+  .sheet.show{display:block}
+  .sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.45);opacity:0;transition:opacity .25s}
+  .sheet.open .sheet-bg{opacity:1}
+  .sheet-body{position:absolute;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top,0px) + 20px);background:var(--bg);border-radius:18px 18px 0 0;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;transform:translateY(100%);transition:transform .28s ease;padding:0 16px calc(24px + env(safe-area-inset-bottom))}
+  .sheet.open .sheet-body{transform:none}
+  .sheet-head{position:sticky;top:0;background:var(--bg);padding:10px 0 8px;z-index:3}
+  .grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
+  .sheet-head .t{display:flex;justify-content:space-between;align-items:center}
+  .x{background:var(--card);border:1px solid var(--line);color:var(--text);width:36px;height:36px;border-radius:50%;font-size:16px;font-family:inherit}
+  .chips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chips button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:20px;padding:7px 12px;font:inherit;font-size:13px;font-weight:600}
+  .chips button.on{background:var(--brand);color:var(--brand-text);border-color:var(--brand)}
+  .headline small{display:block;color:var(--muted);font-size:13px}
+  .headline b{display:block;font-size:32px;margin:2px 0 4px}
+  .delta{font-weight:700}
+  #shStats .stat{background:var(--card);border:1px solid var(--line)}
+  .rk{padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+  .rk:first-child{border-top:0}
+  .rk .top{display:flex;justify-content:space-between;gap:8px}
+  .rk .bar{height:6px;border-radius:3px;margin-top:5px}
   .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--brand);color:var(--brand-text);
     padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
   .toast.on{opacity:1}
@@ -209,11 +238,14 @@
   <!-- PAINEL -->
   <section id="painel" class="on">
     <div class="periodo"><select id="perPainel" aria-label="Período"></select></div>
+    <div class="hint" style="margin:-2px 0 8px">Toque em qualquer número para abrir os gráficos dele.</div>
     <div class="kpis">
-      <div class="kpi hero"><small><i class="dot" style="background:var(--text)"></i>Faturado</small><b id="kFat">–</b><span class="sub" id="kDias"></span></div>
-      <div class="kpi"><small><i class="dot" style="background:var(--s-tax)"></i>Taxas</small><b id="kTax" style="font-size:20px">–</b><span class="sub" id="kTaxPct"></span></div>
-      <div class="kpi"><small><i class="dot" style="background:var(--text)"></i>Líquido</small><b id="kLiq" style="font-size:20px">–</b><span class="sub" id="kLiqPct"></span></div>
-      <div class="kpi hero"><small><i class="dot" style="background:var(--s-liq)"></i>Ganho (líquido − combustível)</small><b id="kRes" style="font-size:24px">–</b><span class="sub" id="kResSub"></span></div>
+      <button class="kpi hero" data-m="fat"><small><i class="dot" style="background:var(--s-fat)"></i>Faturado</small><b id="kFat">–</b><span class="sub" id="kDias"></span></button>
+      <button class="kpi" data-m="taxas"><small><i class="dot" style="background:var(--s-tax)"></i>Taxas</small><b id="kTax" style="font-size:20px">–</b><span class="sub" id="kTaxPct"></span></button>
+      <button class="kpi" data-m="liq"><small><i class="dot" style="background:var(--s-net)"></i>Líquido</small><b id="kLiq" style="font-size:20px">–</b><span class="sub" id="kLiqPct"></span></button>
+      <button class="kpi" data-m="comb"><small><i class="dot" style="background:var(--s-comb)"></i>Combustível</small><b id="kComb" style="font-size:20px">–</b><span class="sub" id="kCombSub"></span></button>
+      <button class="kpi" data-m="km"><small><i class="dot" style="background:var(--s-km)"></i>Km rodados</small><b id="kKm" style="font-size:20px">–</b><span class="sub" id="kKmSub"></span></button>
+      <button class="kpi hero" data-m="ganho"><small><i class="dot" style="background:var(--s-liq)"></i>Ganho (líquido − combustível)</small><b id="kRes" style="font-size:24px">–</b><span class="sub" id="kResSub"></span></button>
     </div>
     <div class="card" style="margin-top:12px">
       <h2 id="chartTitulo">Faturado por dia</h2>
@@ -236,6 +268,23 @@
     <p class="foot"><a href="../">Abrir o Controle Uber (por viagem)</a></p>
   </section>
 </main>
+<div class="sheet" id="sheet">
+  <div class="sheet-bg" id="sheetBg"></div>
+  <div class="sheet-body" role="dialog" aria-modal="true" aria-labelledby="shTitulo">
+    <div class="sheet-head">
+      <div class="grab"></div>
+      <div class="t"><h2 id="shTitulo" style="margin:0;font-size:20px">–</h2><button class="x" id="shFechar" aria-label="Fechar">✕</button></div>
+      <div class="chips" id="shChips"></div>
+    </div>
+    <div class="periodo"><select id="perSheet" aria-label="Período"></select></div>
+    <div class="card headline"><small id="shPer"></small><b id="shValor">–</b><div class="hint" id="shCmp"></div></div>
+    <div class="big" id="shStats" style="margin-bottom:12px"></div>
+    <div class="card"><h2 id="shG1T">Por dia</h2><div class="hint" style="margin:-4px 0 8px">Toque nas barras para ver os valores. A linha tracejada é a média.</div><div class="chartwrap" id="shG1"></div></div>
+    <div class="card"><h2 id="shG2T">Acumulado</h2><div class="chartwrap" id="shG2"></div></div>
+    <div class="card"><h2>Média por dia da semana</h2><div class="hint" id="shSemHint" style="margin:-4px 0 8px"></div><div class="chartwrap" id="shG3"></div></div>
+    <div class="card"><h2 id="shRankT">Ranking dos dias</h2><div id="shRank"></div></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -426,11 +475,11 @@
     const opts = lista.map(m=>[m, nomeMes(m)]).concat(anos.map(a=>['ano:'+a,'Ano de '+a]), [['tudo','Todo o período']]);
     if (!opts.some(o=>o[0]===periodo)) periodo=hoje().slice(0,7);
     const html = opts.map(([v,t])=>`<option value="${v}"${v===periodo?' selected':''}>${t}</option>`).join('');
-    $('perDre').innerHTML=html; $('perPainel').innerHTML=html;
+    $('perDre').innerHTML=html; $('perPainel').innerHTML=html; $('perSheet').innerHTML=html;
   }
-  ['perDre','perPainel'].forEach(id => $(id).onchange = e => {
-    periodo=e.target.value; $('perDre').value=periodo; $('perPainel').value=periodo;
-    renderDre(); renderPainel();
+  ['perDre','perPainel','perSheet'].forEach(id => $(id).onchange = e => {
+    periodo=e.target.value; $('perDre').value=periodo; $('perPainel').value=periodo; $('perSheet').value=periodo;
+    renderDre(); renderPainel(); if ($('sheet').classList.contains('show')) renderSheet();
   });
   const noPeriodo = data => periodo==='tudo' ? true : periodo.startsWith('ano:') ? data.slice(0,4)===periodo.slice(4) : data.slice(0,7)===periodo;
   const nomePeriodo = () => periodo==='tudo' ? 'todo o período' : periodo.startsWith('ano:') ? 'ano de '+periodo.slice(4) : nomeMes(periodo).toLowerCase();
@@ -495,14 +544,18 @@
     $('kLiq').textContent=brl(t.liq); $('kLiqPct').textContent = t.fat>0 ? pct(t.liq/t.fat*100)+' do faturado' : '';
     $('kRes').textContent=brl(t.res); $('kRes').className = t.res>=0?'pos':'neg';
     $('kResSub').textContent = 'Líquido '+brl(t.liq)+' − combustível consumido '+brl(t.comb)+(t.km>0?' · '+brl(t.res/t.km)+' por km':'');
+    $('kComb').textContent=brl(t.comb); $('kCombSub').textContent = t.litrosGastos>0 ? num(t.litrosGastos,1)+' L gastos' : '';
+    $('kKm').textContent=num(t.km,0)+' km'; $('kKmSub').textContent = t.dias ? num(t.km/t.dias,0)+' km por dia' : '';
     $('medias').innerHTML = [
-      ['Faturado por dia', t.dias ? brl(t.fat/t.dias) : '–'],
-      ['Líquido por dia', t.dias ? brl(t.liq/t.dias) : '–'],
-      ['Ganho por dia', t.dias ? brl(t.res/t.dias) : '–'],
-      ['Combustível por dia', t.dias ? brl(t.comb/t.dias) : '–'],
-      ['Km por dia', t.dias ? num(t.km/t.dias,0)+' km' : '–'],
-      ['Ganho por km', t.km>0 ? brl(t.res/t.km) : '–'],
-    ].map(([k,v])=>`<div class="stat"><small>${k}</small><b>${v}</b></div>`).join('');
+      ['fat','Faturado por dia', t.dias ? brl(t.fat/t.dias) : '–'],
+      ['liq','Líquido por dia', t.dias ? brl(t.liq/t.dias) : '–'],
+      ['ganho','Ganho por dia', t.dias ? brl(t.res/t.dias) : '–'],
+      ['comb','Combustível por dia', t.dias ? brl(t.comb/t.dias) : '–'],
+      ['gkm','Ganho por km', t.km>0 ? brl(t.res/t.km) : '–'],
+      ['kml','Média km/L', t.litrosGastos>0 ? num(t.km/t.litrosGastos,1) : '–'],
+      ['ptax','% de taxa', t.fat>0 ? pct(t.tax/t.fat*100) : '–'],
+      ['km','Km por dia', t.dias ? num(t.km/t.dias,0)+' km' : '–'],
+    ].map(([m,k,v])=>`<button class="stat" data-m="${m}"><small>${k}</small><b>${v}</b></button>`).join('');
     renderChart(t.ds);
   }
 
@@ -562,8 +615,211 @@
   }
   function niceStep(v){ const p=Math.pow(10,Math.floor(Math.log10(v||1))), n=v/p; return (n<=1?1:n<=2?2:n<=5?5:10)*p; }
   function barPath(x,y,w,h,r){ if (h<=0) return ''; r=Math.min(r,h,w/2); return `M${x},${y+h}V${y+r}Q${x},${y} ${x+r},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${y+h}Z`; }
-  document.addEventListener('pointerdown', e=>{ if (!e.target.closest('#chart')) $('tip').style.display='none'; });
-  let rz; window.addEventListener('resize', ()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if ($('painel').classList.contains('on')) renderPainel(); },150); });
+  document.addEventListener('pointerdown', e=>{ document.querySelectorAll('.tip').forEach(t=>{ if (!t.parentNode.contains(e.target)) t.style.display='none'; }); });
+  let rz; window.addEventListener('resize', ()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if ($('painel').classList.contains('on')) renderPainel(); if ($('sheet').classList.contains('show')) renderSheet(); },150); });
+
+  // ---------- Detalhe por métrica (abre ao tocar num card do Painel) ----------
+  const SEMANA=['domingo','segunda','terça','quarta','quinta','sexta','sábado'], SEM3=['dom','seg','ter','qua','qui','sex','sáb'];
+  const litrosDe = ds => ds.reduce((t,d)=>t+(d.kml>0?d.km/d.kml:0),0);
+  const combDe = ds => ds.reduce((t,d)=>t+custoDia(d),0);
+  const eixoBrl = v => Math.abs(v)>=1000 ? 'R$ '+num(v/1000,1)+' mil' : 'R$ '+num(v, Math.abs(v)<10?2:0);
+  const METRICAS = {
+    ganho: {nome:'Ganho', cor:'--s-liq', soma:true, fmt:brl, eixo:eixoBrl, f:ds=>soma(ds,'liq')-combDe(ds)},
+    fat:   {nome:'Faturado', cor:'--s-fat', soma:true, fmt:brl, eixo:eixoBrl, f:ds=>soma(ds,'fat')},
+    taxas: {nome:'Taxas', cor:'--s-tax', soma:true, fmt:brl, eixo:eixoBrl, f:ds=>soma(ds,'taxas'), menorMelhor:true},
+    liq:   {nome:'Líquido', cor:'--s-net', soma:true, fmt:brl, eixo:eixoBrl, f:ds=>soma(ds,'liq')},
+    comb:  {nome:'Combustível', cor:'--s-comb', soma:true, fmt:brl, eixo:eixoBrl, f:combDe, menorMelhor:true},
+    km:    {nome:'Km rodados', cor:'--s-km', soma:true, fmt:v=>num(v,0)+' km', eixo:v=>num(v,0), f:ds=>soma(ds,'km')},
+    gkm:   {nome:'Ganho por km', cor:'--s-liq', fmt:brl, eixo:v=>'R$ '+num(v,2), f:ds=>{ const km=soma(ds,'km'); return km>0 ? (soma(ds,'liq')-combDe(ds))/km : NaN; }},
+    kml:   {nome:'Média km/L', cor:'--s-comb', fmt:v=>num(v,1)+' km/L', eixo:v=>num(v,1), f:ds=>{ const l=litrosDe(ds); return l>0 ? soma(ds,'km')/l : NaN; }},
+    ptax:  {nome:'% de taxa', cor:'--s-tax', fmt:v=>num(v,1)+'%', eixo:v=>num(v,0)+'%', f:ds=>{ const f=soma(ds,'fat'); return f>0 ? soma(ds,'taxas')/f*100 : NaN; }, menorMelhor:true},
+  };
+  $('shChips').innerHTML = Object.entries(METRICAS).map(([k,M])=>`<button data-m="${k}">${M.nome}</button>`).join('');
+
+  let metAtual='ganho';
+  function abrirSheet(m){
+    metAtual=m; const sh=$('sheet');
+    if (sh.classList.contains('show')) { renderSheet(); return; }
+    sh.classList.add('show'); document.body.style.overflow='hidden';
+    sh.querySelector('.sheet-body').scrollTop=0;
+    try { history.pushState({sheet:1},''); } catch(e){}
+    renderSheet();
+    requestAnimationFrame(()=>requestAnimationFrame(()=>sh.classList.add('open')));
+  }
+  function fecharSheet(){
+    const sh=$('sheet'); if (!sh.classList.contains('show')) return;
+    sh.classList.remove('open'); document.body.style.overflow='';
+    setTimeout(()=>{ if (!sh.classList.contains('open')) sh.classList.remove('show'); },300);
+  }
+  $('shFechar').onclick = $('sheetBg').onclick = () => { if (history.state && history.state.sheet) history.back(); else fecharSheet(); };
+  window.addEventListener('popstate', fecharSheet);
+  document.addEventListener('click', e => { const b=e.target.closest('[data-m]'); if (b) abrirSheet(b.dataset.m); });
+
+  function periodoAnterior(){
+    if (periodo==='tudo') return null;
+    if (periodo.startsWith('ano:')) return 'ano:'+(+periodo.slice(4)-1);
+    let [a,m]=periodo.split('-').map(Number); m--; if (!m) { m=12; a--; }
+    return a+'-'+String(m).padStart(2,'0');
+  }
+  const diasDe = per => db.dias.filter(d => per.startsWith('ano:') ? d.data.slice(0,4)===per.slice(4) : d.data.slice(0,7)===per);
+  const nomeDe = per => per.startsWith('ano:') ? per.slice(4) : nomeMes(per).toLowerCase();
+  const diaSem = k => new Date(k+'T12:00').getDay();
+
+  // Agrupa por dia (período = mês) ou por mês (ano / tudo), incluindo dias sem lançamento
+  function slots(ds){
+    const porMes = periodo.length!==7, mapa=new Map();
+    if (!porMes) { const [a,m]=periodo.split('-').map(Number); const n=new Date(a,m,0).getDate(); for (let i=1;i<=n;i++) mapa.set(periodo+'-'+String(i).padStart(2,'0'),[]); }
+    else if (periodo.startsWith('ano:')) for (let i=1;i<=12;i++) mapa.set(periodo.slice(4)+'-'+String(i).padStart(2,'0'),[]);
+    ds.forEach(d=>{ const k=porMes?d.data.slice(0,7):d.data; if (!mapa.has(k)) mapa.set(k,[]); mapa.get(k).push(d); });
+    return { porMes, lista:[...mapa.entries()].sort((a,b)=>a[0]<b[0]?-1:1).map(([k,ds])=>({k,ds})) };
+  }
+
+  function renderSheet(){
+    const M=METRICAS[metAtual], ds=db.dias.filter(d=>noPeriodo(d.data));
+    $('shTitulo').textContent=M.nome;
+    document.querySelectorAll('#shChips button').forEach(b=>{
+      const on=b.dataset.m===metAtual; b.classList.toggle('on',on);
+      if (on) { const c=$('shChips'); c.scrollLeft = b.offsetLeft - c.clientWidth/2 + b.offsetWidth/2; }
+    });
+    $('perSheet').value=periodo;
+    $('shPer').textContent = M.nome+' · '+nomePeriodo();
+    const v=M.f(ds);
+    $('shValor').textContent = isFinite(v) ? M.fmt(v) : '–';
+    $('shValor').className = (metAtual==='ganho'||metAtual==='gkm') && isFinite(v) ? (v>=0?'pos':'neg') : '';
+
+    // Comparação com o período anterior
+    const ant=periodoAnterior(); let cmp='';
+    if (ant) {
+      // Mês em andamento: compara com os mesmos dias do mês anterior
+      const parcial = periodo===hoje().slice(0,7), ate=hoje().slice(8,10);
+      const dsA=diasDe(ant).filter(d=>!parcial || d.data.slice(8,10)<=ate), va=M.f(dsA);
+      const nomeAnt = parcial ? `1 a ${+ate} de ${MESES[+ant.slice(5,7)-1]}` : nomeDe(ant);
+      if (dsA.length && isFinite(va) && isFinite(v)) {
+        const dif=v-va, pc = va!==0 ? dif/Math.abs(va)*100 : NaN, bom = M.menorMelhor ? dif<=0 : dif>=0;
+        cmp = `<span class="delta ${dif===0?'':bom?'pos':'neg'}">${dif>=0?'▲':'▼'} ${isFinite(pc)?num(Math.abs(pc),1)+'%':M.fmt(Math.abs(dif))}</span> em relação a ${nomeAnt} (${M.fmt(va)})`;
+      } else cmp = `Sem lançamentos em ${nomeAnt} para comparar.`;
+    }
+    $('shCmp').innerHTML = cmp;
+
+    // Valores por dia trabalhado
+    const porData=new Map(); ds.forEach(d=>{ if (!porData.has(d.data)) porData.set(d.data,[]); porData.get(d.data).push(d); });
+    const diasV=[...porData.entries()].map(([k,x])=>({k, v:M.f(x)})).filter(x=>isFinite(x.v));
+    const maior=diasV.reduce((a,b)=>!a||b.v>a.v?b:a,null), menor=diasV.reduce((a,b)=>!a||b.v<a.v?b:a,null);
+    const mediaDias = diasV.length ? diasV.reduce((t,x)=>t+x.v,0)/diasV.length : NaN;
+    $('shStats').innerHTML = [
+      ['Média por dia', isFinite(mediaDias) ? M.fmt(mediaDias) : '–'],
+      ['Dias trabalhados', porData.size],
+      ['Maior dia', maior ? `${M.fmt(maior.v)}<small>${dataBR(maior.k)} · ${SEMANA[diaSem(maior.k)]}</small>` : '–'],
+      ['Menor dia', menor ? `${M.fmt(menor.v)}<small>${dataBR(menor.k)} · ${SEMANA[diaSem(menor.k)]}</small>` : '–'],
+    ].map(([k,x])=>`<div class="stat"><small>${k}</small><b>${x}</b></div>`).join('');
+
+    // Gráfico 1: por dia / por mês
+    const {porMes, lista} = slots(ds);
+    const rot = k => porMes ? MES3[+k.slice(5,7)-1]+(periodo==='tudo'?' '+k.slice(2,4):'') : String(+k.slice(8,10));
+    const tit = k => porMes ? nomeMes(k) : dataBR(k)+' · '+SEMANA[diaSem(k)];
+    const items = lista.map(g=>({label:rot(g.k), titulo:tit(g.k), v: g.ds.length ? M.f(g.ds) : NaN}));
+    const comDados = items.filter(i=>isFinite(i.v));
+    const media = comDados.length ? comDados.reduce((t,i)=>t+i.v,0)/comDados.length : NaN;
+    $('shG1T').textContent = (porMes?'Por mês':'Por dia');
+    graficoBarras($('shG1'), items, M, media);
+
+    // Gráfico 2: acumulado (somas) ou evolução (médias)
+    if (M.soma) {
+      let ult=-1; items.forEach((it,i)=>{ if (isFinite(it.v)) ult=i; });
+      let acc=0;
+      const acum = items.map((it,i)=>{ if (i>ult) return {...it, v:NaN}; acc+=isFinite(it.v)?it.v:0; return {...it, v:acc}; });
+      $('shG2T').textContent = 'Acumulado no período';
+      graficoLinha($('shG2'), acum, M);
+    } else {
+      $('shG2T').textContent = 'Evolução';
+      graficoLinha($('shG2'), items, M);
+    }
+
+    // Gráfico 3: média por dia da semana
+    const sem=[0,1,2,3,4,5,6].map(w=>{
+      const dd=[...porData.entries()].filter(([k])=>diaSem(k)===w), x=dd.flatMap(e=>e[1]);
+      const val = !dd.length ? NaN : M.soma ? M.f(x)/dd.length : M.f(x);
+      return {label:SEM3[w], titulo:`${SEMANA[w]} · ${dd.length} ${dd.length===1?'dia':'dias'}`, v:val};
+    });
+    const semOk=sem.filter(i=>isFinite(i.v));
+    const melhor = semOk.reduce((a,b)=>!a||(M.menorMelhor?b.v<a.v:b.v>a.v)?b:a,null);
+    $('shSemHint').textContent = melhor ? (M.menorMelhor?'Menor em média: ':'Melhor em média: ')+melhor.titulo.split(' · ')[0]+' ('+M.fmt(melhor.v)+')' : '';
+    graficoBarras($('shG3'), sem, M);
+
+    // Ranking dos dias
+    const rank=diasV.slice().sort((a,b)=>b.v-a.v).slice(0,7), mx=Math.max(...rank.map(r=>Math.abs(r.v)),1e-9);
+    $('shRankT').textContent = 'Dias com maior '+M.nome.toLowerCase();
+    $('shRank').innerHTML = rank.length ? rank.map(r=>`<div class="rk"><div class="top"><span>${dataBR(r.k)} <small style="color:var(--muted)">${SEMANA[diaSem(r.k)]}</small></span><b>${M.fmt(r.v)}</b></div>
+      <div class="bar" style="width:${Math.max(2,Math.abs(r.v)/mx*100)}%;background:${r.v<0?'var(--neg)':`var(${M.cor})`}"></div></div>`).join('')
+      : '<div class="empty">Sem dias lançados neste período.</div>';
+  }
+
+  // ---- Gráficos genéricos (SVG) ----
+  function escala(vals, padT, ch){
+    let mn=Math.min(0,...vals), mx=Math.max(0,...vals); if (mn===mx) mx=1;
+    const step=niceStep((mx-mn)/3); mn=Math.floor(mn/step+1e-9)*step; mx=Math.ceil(mx/step-1e-9)*step;
+    const y=v=>padT+ch-(v-mn)/(mx-mn)*ch, ticks=[];
+    for (let v=mn; v<=mx+step*1e-6; v+=step) ticks.push(Math.round(v/step)*step);
+    return {y,ticks};
+  }
+  const eixos = (ticks,y,W,padL,M) => '<g class="grid">'+ticks.map(v=>`<line x1="${padL}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text x="${padL-6}" y="${y(v)+3}" text-anchor="end">${v?M.eixo(v):'0'}</text>`).join('')+'</g>';
+  function ligarTip(el, info, W){
+    const svg=el.querySelector('svg'), tip=el.querySelector('.tip');
+    const mostrar=e=>{
+      const r=e.target.closest('rect[data-i]'); if (!r) return;
+      const o=info(+r.dataset.i); if (!o) return;
+      tip.innerHTML=o.html; tip.style.display='block';
+      const tw=tip.offsetWidth; tip.style.left=Math.min(Math.max(o.x,tw/2),W-tw/2)+'px';
+      tip.style.top=Math.max(-tip.offsetHeight-6, o.y-tip.offsetHeight-10)+'px';
+    };
+    svg.addEventListener('pointerdown',mostrar); svg.addEventListener('pointermove',mostrar);
+  }
+  function graficoBarras(el, items, M, media){
+    el.innerHTML='<div class="tip"></div>';
+    const ok=items.filter(i=>isFinite(i.v));
+    if (!ok.length) { el.insertAdjacentHTML('beforeend','<div class="empty">Sem dados neste período.</div>'); return; }
+    const W=el.clientWidth||340, H=180, padL=52, padB=20, padT=12, cw=W-padL, ch=H-padB-padT;
+    const {y,ticks}=escala(ok.map(i=>i.v).concat(isFinite(media)?[media]:[]), padT, ch), y0=y(0);
+    const slot=cw/items.length, bw=Math.max(3,Math.min(26,slot*0.7)), cada=Math.ceil(items.length/8);
+    let s=`<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Gráfico de ${M.nome}">`+eixos(ticks,y,W,padL,M);
+    items.forEach((it,i)=>{
+      const cx=padL+slot*i+slot/2, x=cx-bw/2;
+      if (isFinite(it.v) && it.v>0) s+=`<path d="${barPath(x,y(it.v),bw,y0-y(it.v),Math.min(4,bw/2))}" fill="var(${M.cor})"/>`;
+      if (isFinite(it.v) && it.v<0) s+=`<rect x="${x}" y="${y0}" width="${bw}" height="${y(it.v)-y0}" fill="var(--neg)"/>`;
+      if (i%cada===0) s+=`<text x="${cx}" y="${H-5}" text-anchor="middle">${it.label}</text>`;
+    });
+    if (isFinite(media)) s+=`<line x1="${padL}" x2="${W}" y1="${y(media)}" y2="${y(media)}" stroke="var(--text)" stroke-dasharray="4 4" stroke-width="1.5" opacity=".5"/>`;
+    items.forEach((it,i)=> s+=`<rect x="${padL+slot*i}" y="0" width="${slot}" height="${H}" fill="transparent" data-i="${i}"/>`);
+    el.insertAdjacentHTML('beforeend', s+'</svg>');
+    ligarTip(el, i=>{ const it=items[i];
+      return {x:padL+slot*i+slot/2, y:y(isFinite(it.v)?Math.max(0,it.v):0), html:`<b>${it.titulo}</b><br>${isFinite(it.v)?M.fmt(it.v):'sem lançamento'}${isFinite(media)&&isFinite(it.v)?'<br>média '+M.fmt(media):''}`}; }, W);
+  }
+  function graficoLinha(el, items, M){
+    el.innerHTML='<div class="tip"></div>';
+    const pts=items.map((it,i)=>({...it,i})).filter(p=>isFinite(p.v));
+    if (!pts.length) { el.insertAdjacentHTML('beforeend','<div class="empty">Sem dados neste período.</div>'); return; }
+    const W=el.clientWidth||340, H=170, padL=52, padB=20, padT=12, cw=W-padL, ch=H-padB-padT, n=items.length;
+    const {y,ticks}=escala(pts.map(p=>p.v), padT, ch);
+    const x=i=> n===1 ? padL+cw/2 : padL+8+(cw-16)*i/(n-1), cada=Math.ceil(n/8);
+    let s=`<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Linha de ${M.nome}">`+eixos(ticks,y,W,padL,M);
+    const d=pts.map((p,j)=>(j?'L':'M')+x(p.i).toFixed(1)+','+y(p.v).toFixed(1)).join('');
+    if (pts.length>1) s+=`<path d="${d}L${x(pts[pts.length-1].i).toFixed(1)},${y(0)}L${x(pts[0].i).toFixed(1)},${y(0)}Z" fill="var(${M.cor})" opacity=".12"/>`;
+    s+=`<path d="${d}" fill="none" stroke="var(${M.cor})" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const ul=pts[pts.length-1];
+    s+=`<circle cx="${x(ul.i)}" cy="${y(ul.v)}" r="4" fill="var(${M.cor})" stroke="var(--card)" stroke-width="2"/>`;
+    items.forEach((it,i)=>{ if (i%cada===0) s+=`<text x="${x(i)}" y="${H-5}" text-anchor="middle">${it.label}</text>`; });
+    s+=`<line class="cross" y1="${padT}" y2="${padT+ch}" stroke="var(--muted)" stroke-width="1" visibility="hidden"/><circle class="hl" r="5" fill="var(${M.cor})" stroke="var(--card)" stroke-width="2" visibility="hidden"/>`;
+    const passo = n===1 ? cw : (cw-16)/(n-1);
+    items.forEach((it,i)=> s+=`<rect x="${x(i)-passo/2}" y="0" width="${passo}" height="${H}" fill="transparent" data-i="${i}"/>`);
+    el.insertAdjacentHTML('beforeend', s+'</svg>');
+    const cross=el.querySelector('.cross'), hl=el.querySelector('.hl');
+    ligarTip(el, i=>{
+      const p=pts.reduce((a,b)=>Math.abs(b.i-i)<Math.abs(a.i-i)?b:a);
+      cross.setAttribute('x1',x(p.i)); cross.setAttribute('x2',x(p.i)); cross.setAttribute('visibility','visible');
+      hl.setAttribute('cx',x(p.i)); hl.setAttribute('cy',y(p.v)); hl.setAttribute('visibility','visible');
+      return {x:x(p.i), y:y(p.v), html:`<b>${p.titulo}</b><br>${M.fmt(p.v)}`};
+    }, W);
+  }
 
   // ---------- Backup ----------
   function baixar(nome, conteudo, tipo){
