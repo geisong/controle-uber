@@ -15,14 +15,14 @@
   :root{
     --bg:#f3f4f6; --card:#fff; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
     --brand:#111827; --brand-text:#fff; --pos:#15803d; --neg:#b91c1c; --accent:#2563eb;
-    --s-liq:#2563eb; --s-tax:#d97706;
+    --s-liq:#2563eb; --s-tax:#d97706; --s-comb:#0d9488;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){ --bg:#0b0f17; --card:#161b26; --text:#f3f4f6; --muted:#9ca3af; --line:#273042;
-      --brand:#f3f4f6; --brand-text:#111827; --pos:#4ade80; --neg:#f87171; --accent:#60a5fa; --s-liq:#3b82f6; --s-tax:#d97706; color-scheme:dark; }
+      --brand:#f3f4f6; --brand-text:#111827; --pos:#4ade80; --neg:#f87171; --accent:#60a5fa; --s-liq:#3b82f6; --s-tax:#d97706; --s-comb:#0d9488; color-scheme:dark; }
   }
   :root[data-theme="dark"]{ --bg:#0b0f17; --card:#161b26; --text:#f3f4f6; --muted:#9ca3af; --line:#273042;
-    --brand:#f3f4f6; --brand-text:#111827; --pos:#4ade80; --neg:#f87171; --accent:#60a5fa; --s-liq:#3b82f6; --s-tax:#d97706; color-scheme:dark; }
+    --brand:#f3f4f6; --brand-text:#111827; --pos:#4ade80; --neg:#f87171; --accent:#60a5fa; --s-liq:#3b82f6; --s-tax:#d97706; --s-comb:#0d9488; color-scheme:dark; }
   *{box-sizing:border-box}
   [hidden]{display:none!important}
   body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -40,6 +40,7 @@
   label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
   input,select{width:100%;font:inherit;font-size:17px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text)}
   select{-webkit-appearance:none;appearance:none;font-weight:600;font-size:15px;padding:9px 12px;background:var(--card)}
+  input[readonly]{background:var(--card);border-style:dashed;color:var(--muted);font-weight:600}
   input:focus,select:focus{outline:2px solid var(--accent);border-color:transparent}
   .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
@@ -49,6 +50,8 @@
   .stat{background:var(--bg);border-radius:10px;padding:8px 10px;min-width:0}
   .stat small{display:block;color:var(--muted);font-size:11px}
   .stat b{font-size:16px;white-space:nowrap}
+  .stat.ganho{grid-column:1/-1} .stat.ganho b{font-size:22px}
+  .mov.info{opacity:.6}
   .preview{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
   .pos{color:var(--pos)} .neg{color:var(--neg)}
   .item{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
@@ -127,6 +130,9 @@
           <input id="dKml" type="number" inputmode="decimal" step="0.1" min="0" placeholder="ex: 11">
         </div>
       </div>
+      <label for="dPreco">Preço do litro (último abastecimento)</label>
+      <input id="dPreco" type="text" readonly tabindex="-1" placeholder="sem abastecimento">
+      <div class="hint" id="precoHint"></div>
       <label for="dFat">Valor faturado (R$)</label>
       <input id="dFat" type="number" inputmode="decimal" step="0.01" min="0" placeholder="total pago pelos passageiros">
       <div class="row">
@@ -141,10 +147,11 @@
       </div>
       <div class="hint">Preencha faturado e taxas que o líquido é calculado. Ou faturado e líquido que as taxas são calculadas.</div>
       <div class="preview">
-        <div class="stat"><small>Litros gastos (estimado)</small><b id="pLitros">–</b></div>
+        <div class="stat"><small>Litros gastos (km ÷ km/L)</small><b id="pLitros">–</b></div>
+        <div class="stat"><small>Combustível do dia</small><b id="pComb">–</b></div>
         <div class="stat"><small>% de taxa</small><b id="pTaxa">–</b></div>
-        <div class="stat"><small>Líquido por km</small><b id="pPorKm">–</b></div>
-        <div class="stat"><small>Combustível (estimado)</small><b id="pComb">–</b></div>
+        <div class="stat"><small>Ganho por km</small><b id="pPorKm">–</b></div>
+        <div class="stat ganho"><small>Ganho do dia (líquido − combustível)</small><b id="pGanho">–</b></div>
       </div>
       <button class="btn" id="salvarDia">Salvar dia</button>
       <button class="btn ghost" id="cancelarEdicao" hidden>Cancelar edição</button>
@@ -168,11 +175,11 @@
           <input id="aValor" type="number" inputmode="decimal" step="0.01" min="0" placeholder="ex: 200,00">
         </div>
         <div>
-          <label for="aPreco">Preço do litro (opcional)</label>
+          <label for="aPreco">Preço do litro (R$)</label>
           <input id="aPreco" type="number" inputmode="decimal" step="0.01" min="0" placeholder="ex: 5,89">
         </div>
       </div>
-      <div class="hint" id="aLitros">Com o preço do litro, o app estima quanto de combustível cada dia gastou.</div>
+      <div class="hint" id="aLitros">Litros abastecidos: –</div>
       <button class="btn" id="salvarAbast">Salvar abastecimento</button>
     </div>
 
@@ -205,12 +212,13 @@
     <div class="kpis">
       <div class="kpi hero"><small><i class="dot" style="background:var(--text)"></i>Faturado</small><b id="kFat">–</b><span class="sub" id="kDias"></span></div>
       <div class="kpi"><small><i class="dot" style="background:var(--s-tax)"></i>Taxas</small><b id="kTax" style="font-size:20px">–</b><span class="sub" id="kTaxPct"></span></div>
-      <div class="kpi"><small><i class="dot" style="background:var(--s-liq)"></i>Líquido</small><b id="kLiq" style="font-size:20px">–</b><span class="sub" id="kLiqPct"></span></div>
-      <div class="kpi hero"><small>Resultado após combustível</small><b id="kRes" style="font-size:24px">–</b><span class="sub" id="kResSub"></span></div>
+      <div class="kpi"><small><i class="dot" style="background:var(--text)"></i>Líquido</small><b id="kLiq" style="font-size:20px">–</b><span class="sub" id="kLiqPct"></span></div>
+      <div class="kpi hero"><small><i class="dot" style="background:var(--s-liq)"></i>Ganho (líquido − combustível)</small><b id="kRes" style="font-size:24px">–</b><span class="sub" id="kResSub"></span></div>
     </div>
     <div class="card" style="margin-top:12px">
       <h2 id="chartTitulo">Faturado por dia</h2>
-      <div class="legend"><span><i class="dot" style="background:var(--s-liq)"></i>Líquido</span><span><i class="dot" style="background:var(--s-tax)"></i>Taxas</span><span>altura total = faturado</span></div>
+      <div class="legend"><span><i class="dot" style="background:var(--s-liq)"></i>Ganho</span><span><i class="dot" style="background:var(--s-comb)"></i>Combustível</span><span><i class="dot" style="background:var(--s-tax)"></i>Taxas</span></div>
+      <div class="hint" style="margin:-2px 0 8px">A barra inteira é o faturado. Toque numa barra para ver os valores.</div>
       <div class="chartwrap" id="chart"><div class="tip" id="tip"></div></div>
     </div>
     <div class="card">
@@ -271,6 +279,10 @@
     return ate[0] || com.sort((a,b)=> a.data<b.data?-1:1)[0] || null;
   }
 
+  // Combustível gasto no dia: km ÷ km/L × preço do litro vigente na data
+  function custoDia(d){ const p=precoNaData(d.data); return d.kml>0 && p ? d.km/d.kml*p.preco : 0; }
+  const ganhoDia = d => d.liq - custoDia(d);
+
   // ---------- Fechamento do dia ----------
   let editando = null; // id do dia em edição
   let ultimoEditado = null; // 'tax' ou 'liq'
@@ -286,15 +298,25 @@
   $('dLiq').addEventListener('input', ()=>{ recalcular('liq'); preview(); });
   ['dKm','dKml'].forEach(id => $(id).addEventListener('input', preview));
   $('dData').addEventListener('change', preview);
+  function precoDoForm(){
+    const p = precoNaData($('dData').value || hoje());
+    $('dPreco').value = p ? brl(p.preco) : '';
+    $('precoHint').textContent = p ? `Do abastecimento de ${dataBR(p.data)}.` : 'Cadastre um abastecimento na aba Abastecer para o preço do litro aparecer aqui.';
+    return p;
+  }
 
   function preview(){
     const km=val('dKm'), kml=val('dKml'), fat=val('dFat'), tax=val('dTax'), liq=val('dLiq');
     const litros = km>0 && kml>0 ? km/kml : NaN;
-    const p = precoNaData($('dData').value || hoje());
+    const p = precoDoForm();
+    const comb = isFinite(litros) && p ? litros*p.preco : NaN;
+    const ganho = isFinite(liq) && isFinite(comb) ? liq-comb : NaN;
     $('pLitros').textContent = isFinite(litros) ? num(litros,1)+' L' : '–';
-    $('pComb').textContent = isFinite(litros) && p ? brl(litros*p.preco) : '–';
+    $('pComb').textContent = isFinite(comb) ? brl(comb) : '–';
     $('pTaxa').textContent = fat>0 && isFinite(tax) ? pct(tax/fat*100) : '–';
-    $('pPorKm').textContent = km>0 && isFinite(liq) ? brl(liq/km) : '–';
+    $('pPorKm').textContent = km>0 && isFinite(ganho) ? brl(ganho/km) : '–';
+    $('pGanho').textContent = isFinite(ganho) ? brl(ganho) : '–';
+    $('pGanho').className = isFinite(ganho) ? (ganho>=0?'pos':'neg') : '';
   }
 
   function limparDia(){
@@ -312,6 +334,7 @@
     if (!data) return toast('Informe a data');
     if (!(km>=0)) return toast('Informe os km rodados');
     if (!(kml>0)) return toast('Informe quantos km/L o carro fez');
+    if (!precoNaData(data)) return toast('Cadastre um abastecimento com o preço do litro primeiro');
     if (!(fat>=0)) return toast('Informe o valor faturado');
     if (!isFinite(tax) && isFinite(liq)) tax = fat-liq;
     if (!isFinite(tax)) return toast('Informe as taxas ou o ganho líquido');
@@ -322,7 +345,7 @@
     else db.dias.push(reg);
     db.ultimoKml = kml;
     salvar();
-    toast((editando?'Dia atualizado':'Dia salvo')+': líquido de '+brl(liq));
+    toast((editando?'Dia atualizado':'Dia salvo')+': ganho de '+brl(ganhoDia(reg)));
     limparDia(); renderDias(); popularPeriodos();
   };
 
@@ -334,8 +357,9 @@
     el.innerHTML = lista.map(d => `
       <div class="item">
         <div class="l"><b>${dataBR(d.data)}</b>
-          <small>${num(d.km)} km · ${num(d.kml)} km/L</small><small>Faturado ${brl(d.fat)} · taxas ${brl(d.taxas)}</small></div>
-        <div class="r"><b class="${d.liq>=0?'pos':'neg'}">${brl(d.liq)}</b><br>
+          <small>${num(d.km)} km · ${num(d.kml)} km/L</small><small>Faturado ${brl(d.fat)} · taxas ${brl(d.taxas)}</small>
+          <small>Líquido ${brl(d.liq)} · combustível ${brl(custoDia(d))}</small></div>
+        <div class="r"><small>ganho</small><b class="${ganhoDia(d)>=0?'pos':'neg'}">${brl(ganhoDia(d))}</b><br>
           <button class="lnk" data-edit="${d.id}">editar</button><button class="lnk del" data-del-d="${d.id}">excluir</button></div>
       </div>`).join('') + (db.dias.length>60 ? '<div class="empty">Mostrando os 60 mais recentes. O total está no DRE.</div>' : '');
   }
@@ -343,19 +367,20 @@
   // ---------- Abastecimento ----------
   function previewAbast(){
     const v=val('aValor'), p=val('aPreco');
-    $('aLitros').textContent = v>0 && p>0 ? 'Litros abastecidos: '+num(v/p,2)+' L' : 'Com o preço do litro, o app estima quanto de combustível cada dia gastou.';
+    $('aLitros').textContent = 'Litros abastecidos: ' + (v>0 && p>0 ? num(v/p,2)+' L' : '–');
   }
   ['aValor','aPreco'].forEach(id => $(id).addEventListener('input', previewAbast));
   $('salvarAbast').onclick = () => {
     const data=$('aData').value, valor=val('aValor'), preco=val('aPreco');
     if (!data) return toast('Informe a data do abastecimento');
     if (!(valor>0)) return toast('Informe o valor abastecido');
-    const reg = { id: novoId(), criado: Date.now(), data, valor:r2(valor) };
-    if (preco>0) { reg.preco=preco; reg.litros=valor/preco; }
+    if (!(preco>0)) return toast('Informe o preço do litro');
+    const reg = { id: novoId(), criado: Date.now(), data, valor:r2(valor), preco, litros:valor/preco };
     db.abastecimentos.push(reg);
     salvar();
     $('aValor').value=''; $('aPreco').value='';
-    previewAbast(); renderAbast(); popularPeriodos(); preview();
+    previewAbast();
+    renderAbast(); renderDias(); popularPeriodos(); preview();
     toast('Abastecimento salvo');
   };
   function renderAbast(){
@@ -387,7 +412,7 @@
     }
     const d=b.dataset.delD, a=b.dataset.delA;
     if (d) { db.dias=db.dias.filter(x=>x.id!==d); if (editando===d) limparDia(); renderDias(); }
-    if (a) { db.abastecimentos=db.abastecimentos.filter(x=>x.id!==a); renderAbast(); preview(); }
+    if (a) { db.abastecimentos=db.abastecimentos.filter(x=>x.id!==a); renderAbast(); renderDias(); preview(); }
     salvar(); popularPeriodos(); toast('Excluído');
   });
 
@@ -412,11 +437,10 @@
 
   function totais(){
     const ds=db.dias.filter(d=>noPeriodo(d.data)), as=db.abastecimentos.filter(a=>noPeriodo(a.data));
-    const fat=soma(ds,'fat'), tax=soma(ds,'taxas'), liq=soma(ds,'liq'), comb=soma(as,'valor'), km=soma(ds,'km');
+    const fat=soma(ds,'fat'), tax=soma(ds,'taxas'), liq=soma(ds,'liq'), abastecido=soma(as,'valor'), km=soma(ds,'km');
     const litrosGastos = ds.reduce((t,d)=>t+(d.kml>0?d.km/d.kml:0),0);
-    const combEst = ds.reduce((t,d)=>{ const p=precoNaData(d.data); return t+(d.kml>0&&p?d.km/d.kml*p.preco:0); },0);
-    const temPreco = db.abastecimentos.some(a=>a.preco>0);
-    return { ds, as, fat, tax, liq, comb, km, res: liq-comb, litrosGastos, combEst, temPreco, dias:new Set(ds.map(d=>d.data)).size };
+    const comb = ds.reduce((t,d)=>t+custoDia(d),0);
+    return { ds, as, fat, tax, liq, comb, abastecido, km, res: liq-comb, litrosGastos, dias:new Set(ds.map(d=>d.data)).size };
   }
 
   // ---------- DRE ----------
@@ -429,36 +453,37 @@
       <tr><td>Receita bruta (faturado)</td><td>${brl(t.fat)}</td></tr>
       <tr class="sub"><td>(−) Taxas da plataforma</td><td>${brl(-t.tax)} ${p(t.tax)}</td></tr>
       <tr class="tot"><td>(=) Receita líquida</td><td>${brl(t.liq)} ${p(t.liq)}</td></tr>
-      <tr class="sub"><td>(−) Combustível (abastecimentos)</td><td>${brl(-t.comb)} ${p(t.comb)}</td></tr>
-      <tr class="tot"><td>(=) Resultado do período</td><td class="${cls(t.res)}">${brl(t.res)} ${p(t.res)}</td></tr>`;
+      <tr class="sub"><td>(−) Combustível consumido<br><small style="margin:0">km ÷ km/L × preço do litro</small></td><td>${brl(-t.comb)} ${p(t.comb)}</td></tr>
+      <tr class="tot"><td>(=) Ganho do período</td><td class="${cls(t.res)}">${brl(t.res)} ${p(t.res)}</td></tr>`;
     const ind = [
       ['Dias trabalhados', t.dias],
       ['Km rodados', num(t.km,0)+' km'],
       ['Média km/L', t.litrosGastos>0 ? num(t.km/t.litrosGastos,1) : '–'],
-      ['Litros gastos (estimado)', t.litrosGastos>0 ? num(t.litrosGastos,1)+' L' : '–'],
-      ['Combustível gasto (estimado)', t.temPreco && t.combEst>0 ? brl(t.combEst) : '–'],
-      ['Resultado com combustível estimado', t.temPreco && t.combEst>0 ? brl(t.liq-t.combEst) : '–'],
+      ['Litros gastos', t.litrosGastos>0 ? num(t.litrosGastos,1)+' L' : '–'],
+      ['Ganho por dia', t.dias ? brl(t.res/t.dias) : '–'],
+      ['Ganho por km', t.km>0 ? brl(t.res/t.km) : '–'],
       ['Faturado por km', t.km>0 ? brl(t.fat/t.km) : '–'],
-      ['Resultado por km', t.km>0 ? brl(t.res/t.km) : '–'],
+      ['Pago em abastecimentos', brl(t.abastecido)],
     ];
-    $('dreInd').innerHTML = ind.map(([k,v])=>`<div class="stat"><small>${k}</small><b>${v}</b></div>`).join('')
-      + (t.temPreco ? '' : '<div class="hint" style="grid-column:1/-1">Informe o preço do litro nos abastecimentos para ver o combustível estimado pelos km rodados.</div>');
+    $('dreInd').innerHTML = ind.map(([k,v])=>`<div class="stat"><small>${k}</small><b>${v}</b></div>`).join('');
 
     // Movimentações em ordem cronológica, com saldo acumulado
     const movs=[];
     t.ds.forEach(d=>{
       movs.push({data:d.data, ord:d.criado, o:0, desc:'Faturamento do dia', det:`${num(d.km)} km · ${num(d.kml)} km/L`, v:d.fat});
       if (d.taxas) movs.push({data:d.data, ord:d.criado, o:1, desc:'Taxas da plataforma', det:d.fat>0?num(d.taxas/d.fat*100,1)+'% do faturado':'', v:-d.taxas});
+      const p=precoNaData(d.data), c=custoDia(d);
+      if (c) movs.push({data:d.data, ord:d.criado, o:2, desc:'Combustível consumido', det:`${num(d.km/d.kml,1)} L × ${brl(p.preco)}/L`, v:-c});
     });
-    t.as.forEach(a=> movs.push({data:a.data, ord:a.criado, o:2, desc:'Abastecimento', det:a.preco?`${num(a.litros,2)} L a ${brl(a.preco)}/L`:'', v:-a.valor}));
+    t.as.forEach(a=> movs.push({data:a.data, ord:a.criado, o:3, info:true, desc:'Abastecimento (pagamento)', det:(a.preco?`${num(a.litros,2)} L a ${brl(a.preco)}/L · `:'')+'não entra no ganho, o consumo já está por dia', v:-a.valor}));
     movs.sort((a,b)=> a.data<b.data?-1:a.data>b.data?1:a.ord-b.ord||a.o-b.o);
     let saldo=0;
-    movs.forEach(m=>{ saldo+=m.v; m.saldo=saldo; });
+    movs.forEach(m=>{ if (!m.info) saldo+=m.v; m.saldo=saldo; });
     $('dreMov').innerHTML = movs.length ? movs.reverse().map(m=>`
-      <div class="mov"><span class="d">${ddmm(m.data)}${periodo.length===7?'':'<br>'+m.data.slice(0,4)}</span>
+      <div class="mov${m.info?' info':''}"><span class="d">${ddmm(m.data)}${periodo.length===7?'':'<br>'+m.data.slice(0,4)}</span>
         <span class="desc">${m.desc}${m.det?`<small>${m.det}</small>`:''}</span>
         <span class="v ${m.v>=0?'pos':'neg'}">${m.v>=0?'+':''}${brl(m.v)}</span>
-        <span class="s">saldo ${brl(m.saldo)}</span></div>`).join('')
+        ${m.info?'':`<span class="s">saldo ${brl(m.saldo)}</span>`}</div>`).join('')
       : '<div class="empty">Nenhuma movimentação neste período.</div>';
   }
 
@@ -469,12 +494,14 @@
     $('kTax').textContent=brl(t.tax); $('kTaxPct').textContent = t.fat>0 ? pct(t.tax/t.fat*100)+' do faturado' : '';
     $('kLiq').textContent=brl(t.liq); $('kLiqPct').textContent = t.fat>0 ? pct(t.liq/t.fat*100)+' do faturado' : '';
     $('kRes').textContent=brl(t.res); $('kRes').className = t.res>=0?'pos':'neg';
-    $('kResSub').textContent = 'Líquido '+brl(t.liq)+' − abastecimentos '+brl(t.comb);
+    $('kResSub').textContent = 'Líquido '+brl(t.liq)+' − combustível consumido '+brl(t.comb)+(t.km>0?' · '+brl(t.res/t.km)+' por km':'');
     $('medias').innerHTML = [
       ['Faturado por dia', t.dias ? brl(t.fat/t.dias) : '–'],
       ['Líquido por dia', t.dias ? brl(t.liq/t.dias) : '–'],
+      ['Ganho por dia', t.dias ? brl(t.res/t.dias) : '–'],
+      ['Combustível por dia', t.dias ? brl(t.comb/t.dias) : '–'],
       ['Km por dia', t.dias ? num(t.km/t.dias,0)+' km' : '–'],
-      ['Líquido por km', t.km>0 ? brl(t.liq/t.km) : '–'],
+      ['Ganho por km', t.km>0 ? brl(t.res/t.km) : '–'],
     ].map(([k,v])=>`<div class="stat"><small>${k}</small><b>${v}</b></div>`).join('');
     renderChart(t.ds);
   }
@@ -488,9 +515,9 @@
     $('chartTitulo').textContent = porMes ? 'Faturado por mês' : 'Faturado por dia';
     const grupos=new Map();
     if (!porMes) { const [a,m]=periodo.split('-').map(Number); const n=new Date(a,m,0).getDate();
-      for (let i=1;i<=n;i++) grupos.set(periodo+'-'+String(i).padStart(2,'0'), {fat:0,taxas:0,liq:0}); }
-    else if (periodo.startsWith('ano:')) { for (let i=1;i<=12;i++) grupos.set(periodo.slice(4)+'-'+String(i).padStart(2,'0'), {fat:0,taxas:0,liq:0}); }
-    ds.forEach(d=>{ const k=porMes?d.data.slice(0,7):d.data; const g=grupos.get(k)||{fat:0,taxas:0,liq:0}; g.fat+=d.fat; g.taxas+=d.taxas; g.liq+=d.liq; grupos.set(k,g); });
+      for (let i=1;i<=n;i++) grupos.set(periodo+'-'+String(i).padStart(2,'0'), {fat:0,taxas:0,liq:0,comb:0}); }
+    else if (periodo.startsWith('ano:')) { for (let i=1;i<=12;i++) grupos.set(periodo.slice(4)+'-'+String(i).padStart(2,'0'), {fat:0,taxas:0,liq:0,comb:0}); }
+    ds.forEach(d=>{ const k=porMes?d.data.slice(0,7):d.data; const g=grupos.get(k)||{fat:0,taxas:0,liq:0,comb:0}; g.fat+=d.fat; g.taxas+=d.taxas; g.liq+=d.liq; g.comb+=custoDia(d); grupos.set(k,g); });
     barras=[...grupos.entries()].sort((a,b)=>a[0]<b[0]?-1:1).map(([k,g])=>({k,...g}));
     if (!ds.length) { wrap.insertAdjacentHTML('beforeend','<div class="empty">Sem dias lançados neste período.</div>'); return; }
 
@@ -505,10 +532,15 @@
     const cada = Math.ceil(barras.length/8);
     barras.forEach((b,i)=>{
       const cx=padL+slot*i+slot/2, x=cx-bw/2;
-      const liq=Math.max(0,b.liq), tax=Math.max(0,b.taxas);
-      const yl=y(liq), yt=y(liq+tax);
-      if (liq>0) s+=`<path d="${barPath(x, yl, bw, y(0)-yl, tax>0?0:Math.min(4,bw/2))}" fill="var(--s-liq)"/>`;
-      if (tax>0) { const h=Math.max(0,yl-yt-(liq>0?2:0)); s+=`<path d="${barPath(x, yt, bw, h, Math.min(4,bw/2,h))}" fill="var(--s-tax)"/>`; }
+      // Empilha ganho, combustível e taxas (soma = faturado)
+      const segs=[[Math.max(0,b.liq-b.comb),'--s-liq'],[Math.max(0,Math.min(b.comb,b.liq)),'--s-comb'],[Math.max(0,b.taxas),'--s-tax']].filter(g=>g[0]>0);
+      let base=0;
+      segs.forEach(([v,cor],j)=>{
+        const y0=y(base), y1=y(base+v), ultimo=j===segs.length-1;
+        const h=Math.max(0,y0-y1-(j>0?2:0));
+        if (h>0) s+=`<path d="${barPath(x, y1, bw, h, ultimo?Math.min(4,bw/2,h):0)}" fill="var(${cor})"/>`;
+        base+=v;
+      });
       if (i%cada===0) s+=`<text x="${cx}" y="${H-5}" text-anchor="middle">${porMes?MES3[+b.k.slice(5,7)-1]+(periodo==='tudo'?' '+b.k.slice(2,4):''):+b.k.slice(8,10)}</text>`;
       s+=`<rect x="${padL+slot*i}" y="0" width="${slot}" height="${H}" fill="transparent" data-i="${i}"/>`;
     });
@@ -519,7 +551,7 @@
       const r=e.target.closest('rect[data-i]'); if (!r) return;
       const b=barras[+r.dataset.i];
       const cx=padL+slot*(+r.dataset.i)+slot/2;
-      tip.innerHTML=`<b>${porMes?nomeMes(b.k):dataBR(b.k)}</b><br>Faturado ${brl(b.fat)}<br>Taxas ${brl(b.taxas)}<br>Líquido ${brl(b.liq)}`;
+      tip.innerHTML=`<b>${porMes?nomeMes(b.k):dataBR(b.k)}</b><br>Faturado ${brl(b.fat)}<br>Taxas ${brl(b.taxas)}<br>Líquido ${brl(b.liq)}<br>Combustível ${brl(b.comb)}<br><b>Ganho ${brl(b.liq-b.comb)}</b>`;
       tip.style.display='block';
       const tw=tip.offsetWidth; tip.style.left=Math.min(Math.max(cx,tw/2),W-tw/2)+'px';
       tip.style.top=Math.max(-tip.offsetHeight-6, y(b.fat)-tip.offsetHeight-8)+'px';
@@ -557,9 +589,9 @@
   };
   $('exportarCsv').onclick = () => {
     const f=n=>isFinite(n)?String((+n).toFixed(2)).replace('.',','):'';
-    const linhas=[['Data','Tipo','Km','Km/L','Faturado','Taxas','Liquido','Abastecimento','Preco litro'].join(';')];
-    const regs = db.dias.map(d=>({data:d.data,c:d.criado,l:[dataBR(d.data),'Dia',f(d.km),f(d.kml),f(d.fat),f(d.taxas),f(d.liq),'','']}))
-      .concat(db.abastecimentos.map(a=>({data:a.data,c:a.criado,l:[dataBR(a.data),'Abastecimento','','','','','',f(a.valor),a.preco?f(a.preco):'']})));
+    const linhas=[['Data','Tipo','Km','Km/L','Faturado','Taxas','Liquido','Combustivel consumido','Ganho','Abastecimento','Preco litro'].join(';')];
+    const regs = db.dias.map(d=>{ const p=precoNaData(d.data); return {data:d.data,c:d.criado,l:[dataBR(d.data),'Dia',f(d.km),f(d.kml),f(d.fat),f(d.taxas),f(d.liq),f(custoDia(d)),f(ganhoDia(d)),'',p?f(p.preco):'']}; })
+      .concat(db.abastecimentos.map(a=>({data:a.data,c:a.criado,l:[dataBR(a.data),'Abastecimento','','','','','','','',f(a.valor),a.preco?f(a.preco):'']})));
     regs.sort((a,b)=>a.data<b.data?-1:a.data>b.data?1:a.c-b.c).forEach(x=>linhas.push(x.l.join(';')));
     baixar(`diario-uber-${hoje()}.csv`, '﻿'+linhas.join('\n'), 'text/csv');
   };
