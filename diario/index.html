@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Diário Uber">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Diário Uber</title>
+<style>
+  :root{
+    --bg:#f3f4f6; --card:#fff; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
+    --brand:#111827; --brand-text:#fff; --pos:#15803d; --neg:#b91c1c; --accent:#2563eb;
+    --s-liq:#2563eb; --s-tax:#d97706;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --bg:#0b0f17; --card:#161b26; --text:#f3f4f6; --muted:#9ca3af; --line:#273042;
+      --brand:#f3f4f6; --brand-text:#111827; --pos:#4ade80; --neg:#f87171; --accent:#60a5fa; --s-liq:#3b82f6; --s-tax:#d97706; color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --bg:#0b0f17; --card:#161b26; --text:#f3f4f6; --muted:#9ca3af; --line:#273042;
+    --brand:#f3f4f6; --brand-text:#111827; --pos:#4ade80; --neg:#f87171; --accent:#60a5fa; --s-liq:#3b82f6; --s-tax:#d97706; color-scheme:dark; }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    padding:0 0 calc(24px + env(safe-area-inset-bottom))}
+  header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:14px 16px 8px}
+  h1{margin:0 0 10px;font-size:20px}
+  .tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px}
+  .tabs button{flex:1;border:0;background:none;color:var(--muted);padding:10px 2px;border-radius:9px;font:inherit;font-size:14px;font-weight:600}
+  .tabs button.on{background:var(--brand);color:var(--brand-text)}
+  main{padding:8px 16px}
+  section{display:none} section.on{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .card h2{font-size:16px;margin:0 0 10px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .card h2 small{font-size:12px;color:var(--muted);font-weight:500}
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+  input,select{width:100%;font:inherit;font-size:17px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text)}
+  select{-webkit-appearance:none;appearance:none;font-weight:600;font-size:15px;padding:9px 12px;background:var(--card)}
+  input:focus,select:focus{outline:2px solid var(--accent);border-color:transparent}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .hint{font-size:12px;color:var(--muted);margin-top:4px}
+  .btn{display:block;width:100%;margin-top:14px;padding:13px;border:0;border-radius:11px;background:var(--brand);color:var(--brand-text);font:inherit;font-weight:700}
+  .btn.ghost{background:none;color:var(--muted);border:1px solid var(--line);margin-top:8px;font-weight:600}
+  .stat{background:var(--bg);border-radius:10px;padding:8px 10px;min-width:0}
+  .stat small{display:block;color:var(--muted);font-size:11px}
+  .stat b{font-size:16px;white-space:nowrap}
+  .preview{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+  .pos{color:var(--pos)} .neg{color:var(--neg)}
+  .item{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+  .item:first-child{border-top:0}
+  .item .l{min-width:0} .item .r{text-align:right;white-space:nowrap}
+  .item small{display:block;color:var(--muted);font-size:12px}
+  .lnk{border:0;background:none;color:var(--muted);font-size:12px;padding:4px 0 4px 10px;text-decoration:underline;font-family:inherit}
+  .lnk.armed{color:var(--neg);font-weight:700;text-decoration:none}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:10px 0}
+  .periodo{margin-bottom:10px}
+  /* Painel */
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 10px 12px;min-width:0}
+  .kpi small{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:12px}
+  .kpi b{display:block;font-size:17px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi .sub{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+  .dot{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
+  .hero{grid-column:1/-1}
+  .hero b{font-size:28px}
+  .big{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .chartwrap{position:relative}
+  .chartwrap svg{display:block;width:100%;overflow:visible}
+  .chartwrap text{fill:var(--muted);font-size:10px}
+  .grid line{stroke:var(--line)}
+  .tip{position:absolute;top:0;pointer-events:none;background:var(--brand);color:var(--brand-text);border-radius:10px;padding:7px 10px;font-size:12px;
+    line-height:1.45;white-space:nowrap;transform:translateX(-50%);display:none;z-index:2}
+  .tip b{font-size:13px}
+  /* DRE */
+  .dre{width:100%;border-collapse:collapse;font-size:15px}
+  .dre td{padding:8px 0;border-top:1px solid var(--line)}
+  .dre td:last-child{text-align:right;white-space:nowrap}
+  .dre td small{color:var(--muted);font-size:12px;margin-left:4px}
+  .dre tr.sub td{color:var(--muted);padding-left:12px}
+  .dre tr.tot td{font-weight:700;border-top:2px solid var(--text)}
+  .dre tr:first-child td{border-top:0}
+  .mov{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+  .mov:first-child{border-top:0}
+  .mov .d{color:var(--muted);font-size:12px;width:40px}
+  .mov .v{text-align:right;white-space:nowrap;font-weight:600}
+  .mov .s{grid-column:3;text-align:right;color:var(--muted);font-size:11px;white-space:nowrap}
+  .mov .desc small{display:block;color:var(--muted);font-size:12px}
+  .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--brand);color:var(--brand-text);
+    padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+  .toast.on{opacity:1}
+  .foot{text-align:center;font-size:13px;margin:6px 0 0}
+  .foot a{color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <h1>📒 Diário Uber</h1>
+  <nav class="tabs">
+    <button data-tab="dia" class="on">Dia</button>
+    <button data-tab="abast">Abastecer</button>
+    <button data-tab="dre">DRE</button>
+    <button data-tab="painel">Painel</button>
+  </nav>
+</header>
+
+<main>
+  <!-- FECHAMENTO DO DIA -->
+  <section id="dia" class="on">
+    <div class="card">
+      <h2 id="diaTitulo">Fechamento do dia</h2>
+      <label for="dData">Data</label>
+      <input id="dData" type="date">
+      <div class="row">
+        <div>
+          <label for="dKm">Km rodados</label>
+          <input id="dKm" type="number" inputmode="decimal" step="0.1" min="0" placeholder="ex: 180">
+        </div>
+        <div>
+          <label for="dKml">Km por litro</label>
+          <input id="dKml" type="number" inputmode="decimal" step="0.1" min="0" placeholder="ex: 11">
+        </div>
+      </div>
+      <label for="dFat">Valor faturado (R$)</label>
+      <input id="dFat" type="number" inputmode="decimal" step="0.01" min="0" placeholder="total pago pelos passageiros">
+      <div class="row">
+        <div>
+          <label for="dTax">Taxas (R$)</label>
+          <input id="dTax" type="number" inputmode="decimal" step="0.01" min="0" placeholder="ex: 85,00">
+        </div>
+        <div>
+          <label for="dLiq">Ganho líquido (R$)</label>
+          <input id="dLiq" type="number" inputmode="decimal" step="0.01" placeholder="ex: 265,00">
+        </div>
+      </div>
+      <div class="hint">Preencha faturado e taxas que o líquido é calculado. Ou faturado e líquido que as taxas são calculadas.</div>
+      <div class="preview">
+        <div class="stat"><small>Litros gastos (estimado)</small><b id="pLitros">–</b></div>
+        <div class="stat"><small>% de taxa</small><b id="pTaxa">–</b></div>
+        <div class="stat"><small>Líquido por km</small><b id="pPorKm">–</b></div>
+        <div class="stat"><small>Combustível (estimado)</small><b id="pComb">–</b></div>
+      </div>
+      <button class="btn" id="salvarDia">Salvar dia</button>
+      <button class="btn ghost" id="cancelarEdicao" hidden>Cancelar edição</button>
+    </div>
+
+    <div class="card">
+      <h2>Dias lançados</h2>
+      <div id="listaDias"></div>
+    </div>
+  </section>
+
+  <!-- ABASTECIMENTO -->
+  <section id="abast">
+    <div class="card">
+      <h2>Novo abastecimento</h2>
+      <label for="aData">Data</label>
+      <input id="aData" type="date">
+      <div class="row">
+        <div>
+          <label for="aValor">Valor abastecido (R$)</label>
+          <input id="aValor" type="number" inputmode="decimal" step="0.01" min="0" placeholder="ex: 200,00">
+        </div>
+        <div>
+          <label for="aPreco">Preço do litro (opcional)</label>
+          <input id="aPreco" type="number" inputmode="decimal" step="0.01" min="0" placeholder="ex: 5,89">
+        </div>
+      </div>
+      <div class="hint" id="aLitros">Com o preço do litro, o app estima quanto de combustível cada dia gastou.</div>
+      <button class="btn" id="salvarAbast">Salvar abastecimento</button>
+    </div>
+
+    <div class="card">
+      <h2>Abastecimentos</h2>
+      <div id="listaAbast"></div>
+    </div>
+  </section>
+
+  <!-- DRE -->
+  <section id="dre">
+    <div class="periodo"><select id="perDre" aria-label="Período"></select></div>
+    <div class="card">
+      <h2>DRE <small id="dreSub"></small></h2>
+      <table class="dre"><tbody id="dreTabela"></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Indicadores</h2>
+      <div class="big" id="dreInd"></div>
+    </div>
+    <div class="card">
+      <h2>Movimentações <small>saldo acumulado</small></h2>
+      <div id="dreMov"></div>
+    </div>
+  </section>
+
+  <!-- PAINEL -->
+  <section id="painel">
+    <div class="periodo"><select id="perPainel" aria-label="Período"></select></div>
+    <div class="kpis">
+      <div class="kpi hero"><small><i class="dot" style="background:var(--text)"></i>Faturado</small><b id="kFat">–</b><span class="sub" id="kDias"></span></div>
+      <div class="kpi"><small><i class="dot" style="background:var(--s-tax)"></i>Taxas</small><b id="kTax" style="font-size:20px">–</b><span class="sub" id="kTaxPct"></span></div>
+      <div class="kpi"><small><i class="dot" style="background:var(--s-liq)"></i>Líquido</small><b id="kLiq" style="font-size:20px">–</b><span class="sub" id="kLiqPct"></span></div>
+      <div class="kpi hero"><small>Resultado após combustível</small><b id="kRes" style="font-size:24px">–</b><span class="sub" id="kResSub"></span></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h2 id="chartTitulo">Faturado por dia</h2>
+      <div class="legend"><span><i class="dot" style="background:var(--s-liq)"></i>Líquido</span><span><i class="dot" style="background:var(--s-tax)"></i>Taxas</span><span>altura total = faturado</span></div>
+      <div class="chartwrap" id="chart"><div class="tip" id="tip"></div></div>
+    </div>
+    <div class="card">
+      <h2>Médias</h2>
+      <div class="big" id="medias"></div>
+    </div>
+    <div class="card">
+      <h2>Dados</h2>
+      <div class="hint">Os dados ficam salvos neste aparelho. Faça um backup de vez em quando.</div>
+      <button class="btn ghost" id="exportar">Baixar backup (.json)</button>
+      <button class="btn ghost" id="importarBtn">Restaurar backup (junta com os dados atuais)</button>
+      <input type="file" id="importar" accept="application/json,.json" hidden>
+      <button class="btn ghost" id="exportarCsv">Exportar movimentações (.csv para Excel)</button>
+    </div>
+    <p class="foot"><a href="../">Abrir o Controle Uber (por viagem)</a></p>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const KEY = 'diarioUber.v1';
+  const $ = id => document.getElementById(id);
+  const brl = v => (isFinite(v) ? v : 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const brlCurto = v => v>=1000 ? 'R$ '+(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mil' : 'R$ '+Math.round(v);
+  const num = (v,d=1) => (isFinite(v) ? v : 0).toLocaleString('pt-BR',{maximumFractionDigits:d});
+  const pct = v => isFinite(v) ? num(v,1)+'%' : '–';
+  const hoje = () => { const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+  const dataBR = s => s ? s.split('-').reverse().join('/') : '';
+  const ddmm = s => s.slice(8,10)+'/'+s.slice(5,7);
+  const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const MES3 = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const nomeMes = ym => { const [a,m]=ym.split('-'); return MESES[+m-1].replace(/^./,c=>c.toUpperCase())+' '+a; };
+  const val = id => { const s=String($(id).value).trim(); if (s==='') return NaN; const n=parseFloat(s.replace(',','.')); return isFinite(n)?n:NaN; };
+  const r2 = n => Math.round(n*100)/100;
+  const novoId = () => Date.now()+''+Math.random().toString(36).slice(2,6);
+  const soma = (arr,k) => arr.reduce((t,x)=>t+(+x[k]||0),0);
+
+  let db = { dias: [], abastecimentos: [], ultimoKml: '' };
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s) db = Object.assign(db, s); } catch(e){}
+  const salvar = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){ toast('Não foi possível salvar neste aparelho'); } };
+
+  function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('on'),2000); }
+
+  // Abas
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x===b));
+    document.querySelectorAll('main section').forEach(s => s.classList.toggle('on', s.id===b.dataset.tab));
+    if (b.dataset.tab==='dre') renderDre();
+    if (b.dataset.tab==='painel') renderPainel();
+    window.scrollTo(0,0);
+  });
+
+  // Preço do litro vigente numa data (último abastecimento com preço até a data)
+  function precoNaData(data){
+    const com = db.abastecimentos.filter(a => a.preco>0);
+    const ate = com.filter(a => a.data<=data).sort((a,b)=> a.data<b.data?1:a.data>b.data?-1:b.criado-a.criado);
+    return ate[0] || com.sort((a,b)=> a.data<b.data?-1:1)[0] || null;
+  }
+
+  // ---------- Fechamento do dia ----------
+  let editando = null; // id do dia em edição
+  let ultimoEditado = null; // 'tax' ou 'liq'
+  function recalcular(origem){
+    const fat=val('dFat'), tax=val('dTax'), liq=val('dLiq');
+    if (origem) ultimoEditado = origem==='fat' ? ultimoEditado : origem;
+    if (!isFinite(fat)) return;
+    if (ultimoEditado==='liq' && isFinite(liq)) $('dTax').value = r2(fat-liq);
+    else if (isFinite(tax)) $('dLiq').value = r2(fat-tax);
+  }
+  $('dFat').addEventListener('input', ()=>{ recalcular('fat'); preview(); });
+  $('dTax').addEventListener('input', ()=>{ recalcular('tax'); preview(); });
+  $('dLiq').addEventListener('input', ()=>{ recalcular('liq'); preview(); });
+  ['dKm','dKml'].forEach(id => $(id).addEventListener('input', preview));
+  $('dData').addEventListener('change', preview);
+
+  function preview(){
+    const km=val('dKm'), kml=val('dKml'), fat=val('dFat'), tax=val('dTax'), liq=val('dLiq');
+    const litros = km>0 && kml>0 ? km/kml : NaN;
+    const p = precoNaData($('dData').value || hoje());
+    $('pLitros').textContent = isFinite(litros) ? num(litros,1)+' L' : '–';
+    $('pComb').textContent = isFinite(litros) && p ? brl(litros*p.preco) : '–';
+    $('pTaxa').textContent = fat>0 && isFinite(tax) ? pct(tax/fat*100) : '–';
+    $('pPorKm').textContent = km>0 && isFinite(liq) ? brl(liq/km) : '–';
+  }
+
+  function limparDia(){
+    editando=null; ultimoEditado=null;
+    ['dKm','dFat','dTax','dLiq'].forEach(id=>$(id).value='');
+    $('dData').value=hoje(); if (db.ultimoKml) $('dKml').value=db.ultimoKml;
+    $('diaTitulo').textContent='Fechamento do dia'; $('salvarDia').textContent='Salvar dia'; $('cancelarEdicao').hidden=true;
+    preview();
+  }
+  $('cancelarEdicao').onclick = limparDia;
+
+  $('salvarDia').onclick = () => {
+    const data=$('dData').value, km=val('dKm'), kml=val('dKml'), fat=val('dFat');
+    let tax=val('dTax'), liq=val('dLiq');
+    if (!data) return toast('Informe a data');
+    if (!(km>=0)) return toast('Informe os km rodados');
+    if (!(kml>0)) return toast('Informe quantos km/L o carro fez');
+    if (!(fat>=0)) return toast('Informe o valor faturado');
+    if (!isFinite(tax) && isFinite(liq)) tax = fat-liq;
+    if (!isFinite(tax)) return toast('Informe as taxas ou o ganho líquido');
+    if (tax<0) return toast('As taxas não podem ser negativas: confira faturado e líquido');
+    liq = fat-tax;
+    const reg = { id: editando || novoId(), criado: Date.now(), data, km, kml, fat:r2(fat), taxas:r2(tax), liq:r2(liq) };
+    if (editando) { const i=db.dias.findIndex(x=>x.id===editando); if (i>=0) { reg.criado=db.dias[i].criado; db.dias[i]=reg; } else db.dias.push(reg); }
+    else db.dias.push(reg);
+    db.ultimoKml = kml;
+    salvar();
+    toast((editando?'Dia atualizado':'Dia salvo')+': líquido de '+brl(liq));
+    limparDia(); renderDias(); popularPeriodos();
+  };
+
+  const ordenar = arr => arr.slice().sort((a,b)=> a.data<b.data?1:a.data>b.data?-1:b.criado-a.criado);
+
+  function renderDias(){
+    const el=$('listaDias'), lista=ordenar(db.dias).slice(0,60);
+    if (!lista.length) { el.innerHTML='<div class="empty">Nenhum dia lançado ainda.</div>'; return; }
+    el.innerHTML = lista.map(d => `
+      <div class="item">
+        <div class="l"><b>${dataBR(d.data)}</b>
+          <small>${num(d.km)} km · ${num(d.kml)} km/L</small><small>Faturado ${brl(d.fat)} · taxas ${brl(d.taxas)}</small></div>
+        <div class="r"><b class="${d.liq>=0?'pos':'neg'}">${brl(d.liq)}</b><br>
+          <button class="lnk" data-edit="${d.id}">editar</button><button class="lnk del" data-del-d="${d.id}">excluir</button></div>
+      </div>`).join('') + (db.dias.length>60 ? '<div class="empty">Mostrando os 60 mais recentes. O total está no DRE.</div>' : '');
+  }
+
+  // ---------- Abastecimento ----------
+  function previewAbast(){
+    const v=val('aValor'), p=val('aPreco');
+    $('aLitros').textContent = v>0 && p>0 ? 'Litros abastecidos: '+num(v/p,2)+' L' : 'Com o preço do litro, o app estima quanto de combustível cada dia gastou.';
+  }
+  ['aValor','aPreco'].forEach(id => $(id).addEventListener('input', previewAbast));
+  $('salvarAbast').onclick = () => {
+    const data=$('aData').value, valor=val('aValor'), preco=val('aPreco');
+    if (!data) return toast('Informe a data do abastecimento');
+    if (!(valor>0)) return toast('Informe o valor abastecido');
+    const reg = { id: novoId(), criado: Date.now(), data, valor:r2(valor) };
+    if (preco>0) { reg.preco=preco; reg.litros=valor/preco; }
+    db.abastecimentos.push(reg);
+    salvar();
+    $('aValor').value=''; $('aPreco').value='';
+    previewAbast(); renderAbast(); popularPeriodos(); preview();
+    toast('Abastecimento salvo');
+  };
+  function renderAbast(){
+    const el=$('listaAbast'), lista=ordenar(db.abastecimentos);
+    if (!lista.length) { el.innerHTML='<div class="empty">Nenhum abastecimento salvo ainda.</div>'; return; }
+    el.innerHTML = lista.map(a => `
+      <div class="item">
+        <div class="l"><b>${dataBR(a.data)}</b><small>${a.preco ? num(a.litros,2)+' L a '+brl(a.preco)+'/L' : 'sem preço do litro'}</small></div>
+        <div class="r"><b>${brl(a.valor)}</b><br><button class="lnk del" data-del-a="${a.id}">excluir</button></div>
+      </div>`).join('');
+  }
+
+  // Editar e excluir (excluir: primeiro toque arma, segundo confirma)
+  document.addEventListener('click', e => {
+    const ed=e.target.closest('[data-edit]');
+    if (ed) {
+      const d=db.dias.find(x=>x.id===ed.dataset.edit); if (!d) return;
+      editando=d.id; ultimoEditado='tax';
+      $('dData').value=d.data; $('dKm').value=d.km; $('dKml').value=d.kml; $('dFat').value=d.fat; $('dTax').value=d.taxas; $('dLiq').value=d.liq;
+      $('diaTitulo').textContent='Editando '+dataBR(d.data); $('salvarDia').textContent='Atualizar dia'; $('cancelarEdicao').hidden=false;
+      preview(); window.scrollTo({top:0,behavior:'smooth'});
+      return;
+    }
+    const b=e.target.closest('.del'); if (!b) return;
+    if (!b.classList.contains('armed')) {
+      b.classList.add('armed'); b.textContent='tocar de novo p/ excluir';
+      setTimeout(()=>{ if (b.isConnected){ b.classList.remove('armed'); b.textContent='excluir'; } }, 3000);
+      return;
+    }
+    const d=b.dataset.delD, a=b.dataset.delA;
+    if (d) { db.dias=db.dias.filter(x=>x.id!==d); if (editando===d) limparDia(); renderDias(); }
+    if (a) { db.abastecimentos=db.abastecimentos.filter(x=>x.id!==a); renderAbast(); preview(); }
+    salvar(); popularPeriodos(); toast('Excluído');
+  });
+
+  // ---------- Períodos (compartilhado entre DRE e Painel) ----------
+  let periodo = hoje().slice(0,7); // 'AAAA-MM', 'ano:AAAA' ou 'tudo'
+  function popularPeriodos(){
+    const meses = new Set([hoje().slice(0,7)]);
+    db.dias.forEach(d=>meses.add(d.data.slice(0,7))); db.abastecimentos.forEach(a=>meses.add(a.data.slice(0,7)));
+    const lista=[...meses].sort().reverse();
+    const anos=[...new Set(lista.map(m=>m.slice(0,4)))];
+    const opts = lista.map(m=>[m, nomeMes(m)]).concat(anos.map(a=>['ano:'+a,'Ano de '+a]), [['tudo','Todo o período']]);
+    if (!opts.some(o=>o[0]===periodo)) periodo=hoje().slice(0,7);
+    const html = opts.map(([v,t])=>`<option value="${v}"${v===periodo?' selected':''}>${t}</option>`).join('');
+    $('perDre').innerHTML=html; $('perPainel').innerHTML=html;
+  }
+  ['perDre','perPainel'].forEach(id => $(id).onchange = e => {
+    periodo=e.target.value; $('perDre').value=periodo; $('perPainel').value=periodo;
+    renderDre(); renderPainel();
+  });
+  const noPeriodo = data => periodo==='tudo' ? true : periodo.startsWith('ano:') ? data.slice(0,4)===periodo.slice(4) : data.slice(0,7)===periodo;
+  const nomePeriodo = () => periodo==='tudo' ? 'todo o período' : periodo.startsWith('ano:') ? 'ano de '+periodo.slice(4) : nomeMes(periodo).toLowerCase();
+
+  function totais(){
+    const ds=db.dias.filter(d=>noPeriodo(d.data)), as=db.abastecimentos.filter(a=>noPeriodo(a.data));
+    const fat=soma(ds,'fat'), tax=soma(ds,'taxas'), liq=soma(ds,'liq'), comb=soma(as,'valor'), km=soma(ds,'km');
+    const litrosGastos = ds.reduce((t,d)=>t+(d.kml>0?d.km/d.kml:0),0);
+    const combEst = ds.reduce((t,d)=>{ const p=precoNaData(d.data); return t+(d.kml>0&&p?d.km/d.kml*p.preco:0); },0);
+    const temPreco = db.abastecimentos.some(a=>a.preco>0);
+    return { ds, as, fat, tax, liq, comb, km, res: liq-comb, litrosGastos, combEst, temPreco, dias:new Set(ds.map(d=>d.data)).size };
+  }
+
+  // ---------- DRE ----------
+  function renderDre(){
+    const t=totais();
+    $('dreSub').textContent=nomePeriodo();
+    const p = v => t.fat>0 ? `<small>${num(v/t.fat*100,1)}%</small>` : '';
+    const cls = v => v>=0?'pos':'neg';
+    $('dreTabela').innerHTML = `
+      <tr><td>Receita bruta (faturado)</td><td>${brl(t.fat)}</td></tr>
+      <tr class="sub"><td>(−) Taxas da plataforma</td><td>${brl(-t.tax)} ${p(t.tax)}</td></tr>
+      <tr class="tot"><td>(=) Receita líquida</td><td>${brl(t.liq)} ${p(t.liq)}</td></tr>
+      <tr class="sub"><td>(−) Combustível (abastecimentos)</td><td>${brl(-t.comb)} ${p(t.comb)}</td></tr>
+      <tr class="tot"><td>(=) Resultado do período</td><td class="${cls(t.res)}">${brl(t.res)} ${p(t.res)}</td></tr>`;
+    const ind = [
+      ['Dias trabalhados', t.dias],
+      ['Km rodados', num(t.km,0)+' km'],
+      ['Média km/L', t.litrosGastos>0 ? num(t.km/t.litrosGastos,1) : '–'],
+      ['Litros gastos (estimado)', t.litrosGastos>0 ? num(t.litrosGastos,1)+' L' : '–'],
+      ['Combustível gasto (estimado)', t.temPreco && t.combEst>0 ? brl(t.combEst) : '–'],
+      ['Resultado com combustível estimado', t.temPreco && t.combEst>0 ? brl(t.liq-t.combEst) : '–'],
+      ['Faturado por km', t.km>0 ? brl(t.fat/t.km) : '–'],
+      ['Resultado por km', t.km>0 ? brl(t.res/t.km) : '–'],
+    ];
+    $('dreInd').innerHTML = ind.map(([k,v])=>`<div class="stat"><small>${k}</small><b>${v}</b></div>`).join('')
+      + (t.temPreco ? '' : '<div class="hint" style="grid-column:1/-1">Informe o preço do litro nos abastecimentos para ver o combustível estimado pelos km rodados.</div>');
+
+    // Movimentações em ordem cronológica, com saldo acumulado
+    const movs=[];
+    t.ds.forEach(d=>{
+      movs.push({data:d.data, ord:d.criado, o:0, desc:'Faturamento do dia', det:`${num(d.km)} km · ${num(d.kml)} km/L`, v:d.fat});
+      if (d.taxas) movs.push({data:d.data, ord:d.criado, o:1, desc:'Taxas da plataforma', det:d.fat>0?num(d.taxas/d.fat*100,1)+'% do faturado':'', v:-d.taxas});
+    });
+    t.as.forEach(a=> movs.push({data:a.data, ord:a.criado, o:2, desc:'Abastecimento', det:a.preco?`${num(a.litros,2)} L a ${brl(a.preco)}/L`:'', v:-a.valor}));
+    movs.sort((a,b)=> a.data<b.data?-1:a.data>b.data?1:a.ord-b.ord||a.o-b.o);
+    let saldo=0;
+    movs.forEach(m=>{ saldo+=m.v; m.saldo=saldo; });
+    $('dreMov').innerHTML = movs.length ? movs.reverse().map(m=>`
+      <div class="mov"><span class="d">${ddmm(m.data)}${periodo.length===7?'':'<br>'+m.data.slice(0,4)}</span>
+        <span class="desc">${m.desc}${m.det?`<small>${m.det}</small>`:''}</span>
+        <span class="v ${m.v>=0?'pos':'neg'}">${m.v>=0?'+':''}${brl(m.v)}</span>
+        <span class="s">saldo ${brl(m.saldo)}</span></div>`).join('')
+      : '<div class="empty">Nenhuma movimentação neste período.</div>';
+  }
+
+  // ---------- Painel ----------
+  function renderPainel(){
+    const t=totais();
+    $('kFat').textContent=brl(t.fat); $('kDias').textContent = t.dias+(t.dias===1?' dia':' dias');
+    $('kTax').textContent=brl(t.tax); $('kTaxPct').textContent = t.fat>0 ? pct(t.tax/t.fat*100)+' do faturado' : '';
+    $('kLiq').textContent=brl(t.liq); $('kLiqPct').textContent = t.fat>0 ? pct(t.liq/t.fat*100)+' do faturado' : '';
+    $('kRes').textContent=brl(t.res); $('kRes').className = t.res>=0?'pos':'neg';
+    $('kResSub').textContent = 'Líquido '+brl(t.liq)+' − abastecimentos '+brl(t.comb);
+    $('medias').innerHTML = [
+      ['Faturado por dia', t.dias ? brl(t.fat/t.dias) : '–'],
+      ['Líquido por dia', t.dias ? brl(t.liq/t.dias) : '–'],
+      ['Km por dia', t.dias ? num(t.km/t.dias,0)+' km' : '–'],
+      ['Líquido por km', t.km>0 ? brl(t.liq/t.km) : '–'],
+    ].map(([k,v])=>`<div class="stat"><small>${k}</small><b>${v}</b></div>`).join('');
+    renderChart(t.ds);
+  }
+
+  let barras=[];
+  function renderChart(ds){
+    const wrap=$('chart'), tip=$('tip');
+    wrap.querySelectorAll('svg,.empty').forEach(n=>n.remove()); tip.style.display='none';
+    // Agrupa por dia (mês) ou por mês (ano / tudo)
+    const porMes = periodo.length!==7;
+    $('chartTitulo').textContent = porMes ? 'Faturado por mês' : 'Faturado por dia';
+    const grupos=new Map();
+    if (!porMes) { const [a,m]=periodo.split('-').map(Number); const n=new Date(a,m,0).getDate();
+      for (let i=1;i<=n;i++) grupos.set(periodo+'-'+String(i).padStart(2,'0'), {fat:0,taxas:0,liq:0}); }
+    else if (periodo.startsWith('ano:')) { for (let i=1;i<=12;i++) grupos.set(periodo.slice(4)+'-'+String(i).padStart(2,'0'), {fat:0,taxas:0,liq:0}); }
+    ds.forEach(d=>{ const k=porMes?d.data.slice(0,7):d.data; const g=grupos.get(k)||{fat:0,taxas:0,liq:0}; g.fat+=d.fat; g.taxas+=d.taxas; g.liq+=d.liq; grupos.set(k,g); });
+    barras=[...grupos.entries()].sort((a,b)=>a[0]<b[0]?-1:1).map(([k,g])=>({k,...g}));
+    if (!ds.length) { wrap.insertAdjacentHTML('beforeend','<div class="empty">Sem dias lançados neste período.</div>'); return; }
+
+    const W=wrap.clientWidth||340, H=190, padL=44, padB=20, padT=8, cw=W-padL, ch=H-padB-padT;
+    const max=Math.max(...barras.map(b=>b.fat))||1;
+    const step=niceStep(max/3), top=Math.ceil(max/step)*step;
+    const y=v=>padT+ch-(v/top)*ch;
+    const slot=cw/barras.length, bw=Math.max(3,Math.min(22,slot*0.7));
+    let s=`<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Gráfico de faturado, taxas e líquido"><g class="grid">`;
+    for (let v=0; v<=top+1e-9; v+=step) s+=`<line x1="${padL}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text x="${padL-6}" y="${y(v)+3}" text-anchor="end">${v?brlCurto(v):'0'}</text>`;
+    s+='</g>';
+    const cada = Math.ceil(barras.length/8);
+    barras.forEach((b,i)=>{
+      const cx=padL+slot*i+slot/2, x=cx-bw/2;
+      const liq=Math.max(0,b.liq), tax=Math.max(0,b.taxas);
+      const yl=y(liq), yt=y(liq+tax);
+      if (liq>0) s+=`<path d="${barPath(x, yl, bw, y(0)-yl, tax>0?0:Math.min(4,bw/2))}" fill="var(--s-liq)"/>`;
+      if (tax>0) { const h=Math.max(0,yl-yt-(liq>0?2:0)); s+=`<path d="${barPath(x, yt, bw, h, Math.min(4,bw/2,h))}" fill="var(--s-tax)"/>`; }
+      if (i%cada===0) s+=`<text x="${cx}" y="${H-5}" text-anchor="middle">${porMes?MES3[+b.k.slice(5,7)-1]+(periodo==='tudo'?' '+b.k.slice(2,4):''):+b.k.slice(8,10)}</text>`;
+      s+=`<rect x="${padL+slot*i}" y="0" width="${slot}" height="${H}" fill="transparent" data-i="${i}"/>`;
+    });
+    s+='</svg>';
+    wrap.insertAdjacentHTML('beforeend', s);
+    const svg=wrap.querySelector('svg');
+    const mostrar = e => {
+      const r=e.target.closest('rect[data-i]'); if (!r) return;
+      const b=barras[+r.dataset.i];
+      const cx=padL+slot*(+r.dataset.i)+slot/2;
+      tip.innerHTML=`<b>${porMes?nomeMes(b.k):dataBR(b.k)}</b><br>Faturado ${brl(b.fat)}<br>Taxas ${brl(b.taxas)}<br>Líquido ${brl(b.liq)}`;
+      tip.style.display='block';
+      const tw=tip.offsetWidth; tip.style.left=Math.min(Math.max(cx,tw/2),W-tw/2)+'px';
+      tip.style.top=Math.max(-tip.offsetHeight-6, y(b.fat)-tip.offsetHeight-8)+'px';
+    };
+    svg.addEventListener('pointerdown', mostrar);
+    svg.addEventListener('pointermove', mostrar);
+    svg.addEventListener('pointerleave', e=>{ if (e.pointerType==='mouse') tip.style.display='none'; });
+  }
+  function niceStep(v){ const p=Math.pow(10,Math.floor(Math.log10(v||1))), n=v/p; return (n<=1?1:n<=2?2:n<=5?5:10)*p; }
+  function barPath(x,y,w,h,r){ if (h<=0) return ''; r=Math.min(r,h,w/2); return `M${x},${y+h}V${y+r}Q${x},${y} ${x+r},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${y+h}Z`; }
+  document.addEventListener('pointerdown', e=>{ if (!e.target.closest('#chart')) $('tip').style.display='none'; });
+  let rz; window.addEventListener('resize', ()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if ($('painel').classList.contains('on')) renderPainel(); },150); });
+
+  // ---------- Backup ----------
+  function baixar(nome, conteudo, tipo){
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([conteudo],{type:tipo})); a.download=nome;
+    document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},500);
+  }
+  $('exportar').onclick = () => baixar(`diario-uber-backup-${hoje()}.json`, JSON.stringify(db,null,1), 'application/json');
+  $('importarBtn').onclick = () => $('importar').click();
+  $('importar').onchange = e => {
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload = () => { try {
+      const d=JSON.parse(r.result);
+      if (!Array.isArray(d.dias) || !Array.isArray(d.abastecimentos)) throw 0;
+      const idsD=new Set(db.dias.map(x=>x.id)), idsA=new Set(db.abastecimentos.map(x=>x.id));
+      let n=0;
+      d.dias.forEach(x=>{ if(x&&x.id&&!idsD.has(x.id)){ db.dias.push(x); n++; } });
+      d.abastecimentos.forEach(x=>{ if(x&&x.id&&!idsA.has(x.id)){ db.abastecimentos.push(x); n++; } });
+      if (!db.ultimoKml && d.ultimoKml) db.ultimoKml=d.ultimoKml;
+      salvar(); init(); toast(n ? `Backup restaurado: ${n} registro(s)` : 'Nada novo no backup');
+    } catch(_) { toast('Arquivo de backup inválido'); } };
+    r.readAsText(f); e.target.value='';
+  };
+  $('exportarCsv').onclick = () => {
+    const f=n=>isFinite(n)?String((+n).toFixed(2)).replace('.',','):'';
+    const linhas=[['Data','Tipo','Km','Km/L','Faturado','Taxas','Liquido','Abastecimento','Preco litro'].join(';')];
+    const regs = db.dias.map(d=>({data:d.data,c:d.criado,l:[dataBR(d.data),'Dia',f(d.km),f(d.kml),f(d.fat),f(d.taxas),f(d.liq),'','']}))
+      .concat(db.abastecimentos.map(a=>({data:a.data,c:a.criado,l:[dataBR(a.data),'Abastecimento','','','','','',f(a.valor),a.preco?f(a.preco):'']})));
+    regs.sort((a,b)=>a.data<b.data?-1:a.data>b.data?1:a.c-b.c).forEach(x=>linhas.push(x.l.join(';')));
+    baixar(`diario-uber-${hoje()}.csv`, '﻿'+linhas.join('\n'), 'text/csv');
+  };
+
+  function init(){
+    $('aData').value=hoje();
+    limparDia(); renderDias(); renderAbast(); popularPeriodos(); renderDre(); renderPainel();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
